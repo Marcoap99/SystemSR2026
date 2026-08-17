@@ -70,3 +70,59 @@ export function quarterOf(iso: string): string {
   const q = Math.floor((m - 1) / 3) + 1;
   return `${y}-Q${q}`;
 }
+
+const MESES_ES = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+] as const;
+
+const MESES_ES_ABBR = [
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic",
+] as const;
+
+/** Nombre de mes en español, minúscula: "agosto". */
+export function monthNameEs(iso: string): string {
+  const month = Number(iso.slice(5, 7));
+  return MESES_ES[month - 1]!;
+}
+
+/** "Agosto 2026" — para agrupar el expediente por mes (7.6). */
+export function monthYearLabelEs(iso: string): string {
+  const name = monthNameEs(iso);
+  const year = iso.slice(0, 4);
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${year}`;
+}
+
+/** "10 nov" — usado en el tooltip de fase bloqueada (6.6) y fechas cortas de UI. */
+export function formatShortEs(iso: string): string {
+  const [, m, d] = iso.split("-") as [string, string, string];
+  const month = Number(m);
+  return `${Number(d)} ${MESES_ES_ABBR[month - 1]}`;
+}
+
+/** "10/11/2026" */
+export function formatDMY(iso: string): string {
+  const [y, m, d] = iso.split("-") as [string, string, string];
+  return `${d}/${m}/${y}`;
+}

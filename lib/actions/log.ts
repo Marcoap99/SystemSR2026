@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { today } from "@/lib/domain/dates";
 import { currentWeek } from "@/lib/domain/weeks";
 import { markPeriod } from "@/lib/domain/streaks";
+import { compileExpedienteMarkdown } from "@/lib/domain/expediente";
 import { loadStreakState, persistStreakResult } from "@/lib/server/streak-io";
 import type { Week } from "@/lib/types";
 
@@ -55,4 +56,21 @@ export async function createLogEntryAction(input: NewLogEntryInput) {
 
   revalidatePath("/");
   revalidatePath("/log");
+}
+
+/** 7.6: agrupa el log por mes y lo compila a markdown (esto genera G9.1). */
+export async function compileExpedienteAction(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autenticado");
+
+  const { data: entries, error } = await supabase
+    .from("log_entries")
+    .select("date, what, evidence, ref_code")
+    .order("date", { ascending: true });
+  if (error) throw new Error(error.message);
+
+  return compileExpedienteMarkdown(entries ?? []);
 }

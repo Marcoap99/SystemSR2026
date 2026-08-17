@@ -4,21 +4,7 @@
  * sin `output` no cuenta (columna generada `counts` en la base, ver
  * migración); acá se asume que `counts` ya llegó calculado.
  */
-
-const MESES_ES = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-] as const;
+import { monthNameEs } from "./dates";
 
 export interface ExposureEventLike {
   date: string; // 'YYYY-MM-DD'
@@ -29,10 +15,7 @@ function yearMonth(dateISO: string): string {
   return dateISO.slice(0, 7); // 'YYYY-MM'
 }
 
-export function monthLabel(dateISO: string): string {
-  const month = Number(dateISO.slice(5, 7));
-  return MESES_ES[month - 1]!;
-}
+export const monthLabel = monthNameEs;
 
 /** Cuenta solo los eventos que sí cuentan (con output), del mes de `referenceDateISO`. */
 export function countInMonth(events: ExposureEventLike[], referenceDateISO: string): number {

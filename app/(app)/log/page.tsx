@@ -1,12 +1,28 @@
 import { Card } from "@/components/ui/Card";
+import { LogTable } from "@/components/log/LogTable";
+import { CompileExpedienteButton } from "@/components/log/CompileExpedienteButton";
+import { NewLogEntryModal } from "@/components/dashboard/NewLogEntryModal";
+import { getAllLogEntries } from "@/lib/data/log";
 
-export default function LogPage() {
+export const dynamic = "force-dynamic";
+
+/** 7.6 — log completo + compilar expediente. */
+export default async function LogPage() {
+  const entries = await getAllLogEntries();
+
   return (
     <Card>
-      <h1 className="text-xl font-semibold text-text">Log</h1>
-      <p className="mt-2 text-sm text-text-muted">
-        La tabla completa y el botón &ldquo;Compilar expediente&rdquo; se construyen en el siguiente paso.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold text-text">Log</h1>
+        <div className="flex items-center gap-2">
+          <NewLogEntryModal />
+          <CompileExpedienteButton />
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <LogTable entries={entries} />
+      </div>
     </Card>
   );
 }
