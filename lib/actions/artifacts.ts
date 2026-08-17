@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isPhaseLocked } from "@/lib/domain/phases";
+import { logAppEvent } from "@/lib/server/events";
 import type { ArtifactStatus } from "@/lib/types";
 
 /**
@@ -35,6 +36,10 @@ export async function updateArtifactStatusAction(code: string, status: ArtifactS
 
   const { error } = await supabase.from("artifacts").update({ status }).eq("code", code);
   if (error) throw new Error(error.message);
+
+  if (status === "done" && artifact.status !== "done") {
+    await logAppEvent(supabase, "artifact_done", { code });
+  }
 
   revalidatePath(`/g/${artifact.group_code}`);
   revalidatePath("/");

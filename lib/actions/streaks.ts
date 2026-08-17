@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { today } from "@/lib/domain/dates";
 import { applyFreeze, markPeriod, type StreakKind } from "@/lib/domain/streaks";
 import { loadStreakState, persistStreakResult } from "@/lib/server/streak-io";
+import { logAppEvent } from "@/lib/server/events";
 
 async function requireUser(supabase: Awaited<ReturnType<typeof createClient>>) {
   const {
@@ -21,6 +22,10 @@ export async function markStreakAction(kind: StreakKind) {
   const state = await loadStreakState(supabase, kind);
   const result = markPeriod(state, kind, today());
   await persistStreakResult(supabase, kind, result);
+
+  if (result.events.some((e) => e.action === "marked")) {
+    await logAppEvent(supabase, "streak_marked", { kind });
+  }
 
   revalidatePath("/");
 }
@@ -39,5 +44,6 @@ export async function freezeStreakAction(kind: StreakKind) {
   }
 
   await persistStreakResult(supabase, kind, result);
+  await logAppEvent(supabase, "freeze_used", { kind });
   revalidatePath("/");
 }

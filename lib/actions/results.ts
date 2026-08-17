@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logAppEvent } from "@/lib/server/events";
 import { createLogEntryAction } from "./log";
 
 /**
@@ -30,6 +31,8 @@ export async function achieveResultAction(code: string, achievedAt: string, evid
     .update({ achieved: true, achieved_at: achievedAt })
     .eq("code", code);
   if (updateError) throw new Error(updateError.message);
+
+  await logAppEvent(supabase, "result_achieved", { code });
 
   await createLogEntryAction({
     date: achievedAt,

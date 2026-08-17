@@ -7,6 +7,7 @@ import { currentWeek } from "@/lib/domain/weeks";
 import { markPeriod } from "@/lib/domain/streaks";
 import { compileExpedienteMarkdown } from "@/lib/domain/expediente";
 import { loadStreakState, persistStreakResult } from "@/lib/server/streak-io";
+import { logAppEvent } from "@/lib/server/events";
 import type { Week } from "@/lib/types";
 
 export interface NewLogEntryInput {
@@ -48,10 +49,19 @@ export async function createLogEntryAction(input: NewLogEntryInput) {
   });
   if (insertError) throw new Error(insertError.message);
 
+  await logAppEvent(supabase, "log_created", {
+    week_number: entryWeek.number,
+    ref_code: input.ref_code || null,
+  });
+
   if (activeWeek && entryWeek.number === activeWeek.number) {
     const state = await loadStreakState(supabase, "weekly_log");
     const result = markPeriod(state, "weekly_log", todayISO);
     await persistStreakResult(supabase, "weekly_log", result);
+
+    if (result.events.some((e) => e.action === "marked")) {
+      await logAppEvent(supabase, "streak_marked", { kind: "weekly_log" });
+    }
   }
 
   revalidatePath("/");
