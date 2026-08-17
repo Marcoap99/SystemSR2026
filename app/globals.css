@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* =========================================================
+   Design tokens — PRD sección 4.
+   Todo color/radio/sombra se define acá, una sola vez. Los componentes
+   consumen clases de Tailwind (bg-brand, rounded-card, shadow-card...),
+   nunca hex sueltos.
+   ========================================================= */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Color */
+  --color-brand: #00cb75;
+  --color-brand-dark: #00b369;
+  --color-secondary: #7c3aed;
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-warn: #f59e0b;
+  --color-locked: #9ca3af;
+
+  /* Badges pastel (7.1 / sección 4) */
+  --color-badge-yellow-bg: #fef3c7;
+  --color-badge-yellow-text: #92400e;
+  --color-badge-blue-bg: #dbeafe;
+  --color-badge-blue-text: #1e40af;
+  --color-badge-green-bg: #d1fae5;
+  --color-badge-green-text: #065f46;
+
+  /* Tipografía — escala 12/14/16/20/24/32 */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  /* Radios */
+  --radius-card: 8px;
+  --radius-badge: 4px;
+  --radius-bar: 999px;
+
+  /* Sombra de tarjeta */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Números y contadores (racha, contador regresivo): usar la clase
+   utilitaria `tabular-nums` de Tailwind — no "bailan" de ancho al
+   cambiar de dígito. */

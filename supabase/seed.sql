@@ -6,7 +6,20 @@
 -- Ajusta el email de abajo si no es marcoap99@gmail.com.
 --
 -- Corre esto en el SQL Editor de Supabase (o `supabase db execute -f`)
--- DESPUÉS de aplicar las migraciones.
+-- DESPUÉS de aplicar las migraciones. Después de este script, corre
+-- validate_seed.sql para confirmar que consumes[]/feeds[]/serves[]
+-- apuntan a códigos que sí existen.
+--
+-- Orden de inserción obligatorio por FK (grafo de dependencias):
+--   bosses → phases (phases.unlocked_by_boss → bosses.number)
+--   phases → weeks (weeks.phase_number → phases.number)
+--   weeks  → learn_items, artifact_groups, quests (target_week / week_number)
+--   artifact_groups → artifacts (artifacts.group_code → artifact_groups.code)
+--   phases → artifacts (artifacts.phase_number → phases.number)
+-- results, connections, exposures y streaks no tienen FK entrantes desde
+-- otra tabla sembrada acá, así que su posición exacta es libre; se dejan
+-- intercaladas en el orden de la sección 8 del PRD para que el script se
+-- lea de corrido junto al documento.
 -- =========================================================
 
 do $$
@@ -22,13 +35,15 @@ begin
     raise exception 'No se encontró un usuario con ese email en auth.users. Crea el usuario primero.';
   end if;
 
-  -- ---------- 8.10 Boss fights (van antes por la FK de phases) ----------
+  -- ---------- 8.10 Boss fights (primero: phases los referencia) ----------
   insert into bosses (user_id, number, name, date, criterion, status) values
     (v_user_id, 1, 'Fin de periodo de prueba', '2026-11-10', 'Cero cabos sueltos en lo asignado. G1 adoptado', 'pending'),
     (v_user_id, 2, 'El expediente', '2026-12-18', 'G9.1 compilado y presentado a Jhoanna antes de vacaciones', 'pending'),
     (v_user_id, 3, 'La renovación', '2027-01-20', 'Contrato renovado sin "Jr"', 'pending');
 
   -- ---------- 8.1 Fases ----------
+  -- Fase 1 unlocked=true (activa), fases 2 y 3 en false. Si esto se siembra
+  -- distinto, P5 (Fase 2 bloqueada de verdad) se cae en silencio.
   insert into phases (user_id, number, name, rule, unlocked, unlocked_by_boss) values
     (v_user_id, 1, 'Encajar', 'No brillar, ser confiable. No abrir frentes nuevos', true, null),
     (v_user_id, 2, 'Construir', 'Prueba superada = licencia para proponer', false, 1),
@@ -61,43 +76,30 @@ begin
     (v_user_id, 24, '2027-01-18', '2027-01-24', 3, 'Boss 3', 'alta', 'Boss 3'),
     (v_user_id, 25, '2027-01-25', '2027-01-31', 3, 'Punto de decisión 2', 'media', 'Punto de decisión 2');
 
-  -- ---------- 8.3 Aprendizaje — A-ROL ----------
-  insert into learn_items (user_id, code, track, title, mode, block, source, status, target_week) values
-    (v_user_id, 'AR1', 'rol', 'Método de research y criterio de selección', 'bloque', 'A', 'Video "¿Cómo saber qué método y cuándo?" + Módulo 2 Colectivo 23', 'pending', null),
-    (v_user_id, 'AR2', 'rol', 'Entrevistas a usuarios', 'bloque', 'A', 'Video de entrevistas UX', 'pending', null),
-    (v_user_id, 'AR3', 'rol', 'Guerrilla testing y usabilidad', 'bloque', 'A', 'Platzi — curso Usabilidad UX', 'pending', null),
-    (v_user_id, 'AR4', 'rol', 'Síntesis: de notas crudas a insights', 'bloque', 'A', 'Uxcel affinity diagrams + User Interviews', 'pending', null),
-    (v_user_id, 'AR5', 'rol', 'Medición cuantitativa (SUS, success rate, time on task)', 'bloque', 'A', 'NN/g video SUS + Flat 101', 'pending', null),
-    (v_user_id, 'AR6', 'rol', 'Principios y heurísticas UX', 'bloque', 'A', '10 Leyes de Nielsen + growth.design + lawsofux', 'pending', null),
-    (v_user_id, 'AR7', 'rol', 'Behavior design y gamificación', 'bloque', 'B', 'Yu-kai Chou (Octalysis) + BJ Fogg', 'pending', null),
-    (v_user_id, 'AR8', 'rol', 'Comunicación de resultados', 'bloque', 'A', 'Módulo 7 Colectivo 23 + Aguayo', 'pending', null),
-    (v_user_id, 'AR9', 'rol', 'Figma y FigJam operativo', 'bloque', 'A', 'Videos Figma vs FigJam + Design System vs UI Kit', 'pending', null),
-    (v_user_id, 'AR10', 'rol', 'Fundamentos del negocio fintech (PGH, factoring, unit economics)', 'chamba', null, 'Preguntar internamente + Módulo 3 Colectivo 23', 'pending', null);
-
-  -- ---------- 8.4 Aprendizaje — A-MERCADO ----------
-  insert into learn_items (user_id, code, track, title, mode, block, source, status, target_week) values
-    (v_user_id, 'AM1', 'mercado', 'Inglés — input', 'tiempo_muerto', null, 'Podcasts de producto en traslado y gym', 'pending', null),
-    (v_user_id, 'AM2', 'mercado', 'Inglés — output', 'micro', null, '10 min post-almuerzo. Duolingo. Racha diaria', 'pending', null),
-    (v_user_id, 'AM3', 'mercado', 'SQL', 'bloque', 'A', 'Arranca en semana 23 (enero 2027)', 'pending', 23);
-
-  -- ---------- 8.5 Aprendizaje — A-TOOL ----------
-  insert into learn_items (user_id, code, track, title, mode, block, source, status, target_week) values
-    (v_user_id, 'AT1', 'tool', 'Proyectos con contexto persistente', 'bloque', 'B', null, 'pending', 2),
-    (v_user_id, 'AT2', 'tool', 'Skills (empaquetar formatos recurrentes)', 'bloque', 'B', null, 'pending', 5),
-    (v_user_id, 'AT3', 'tool', 'Conexiones / MCP (Drive, Calendar, Jira)', 'bloque', 'B', null, 'pending', 10),
-    (v_user_id, 'AT4', 'tool', 'Automatizaciones', 'bloque', 'B', null, 'pending', 16),
-    (v_user_id, 'AT5', 'tool', 'Prompting para research (detección de sesgos)', 'bloque', 'B', 'Permanente', 'pending', null);
+  -- ---------- 8.7 Resultados (antes de artifact_groups: feeds[] los referencia) ----------
+  insert into results (user_id, code, title, criterion, achieved, achieved_at, target_month) values
+    (v_user_id, 'L1', 'El proceso de intake está adoptado', '≥3 tickets entraron por el formulario y al menos 1 PO lo llenó sin ayuda', false, null, 'Octubre'),
+    (v_user_id, 'L2', 'Una decisión de producto se movió por mi research', 'Existe una decisión documentada que cambió, con un número mío detrás', false, null, 'Noviembre'),
+    (v_user_id, 'L3', 'Corrí un experimento', 'Hay hipótesis, test ejecutado y resultado medido. Resultado negativo cuenta igual', false, null, 'Diciembre'),
+    (v_user_id, 'L4', 'El repositorio se usa', 'Alguien que no soy yo consultó el repo y lo dijo', false, null, 'Noviembre'),
+    (v_user_id, 'L5', 'Reconocimiento explícito', 'Jhoanna u Omar citan mi trabajo frente a otros', false, null, 'Continuo'),
+    (v_user_id, 'L6', 'Cambio de puesto', 'Contrato renovado sin "Jr"', false, null, 'Enero 2027');
 
   -- ---------- 8.6 Grupos de artefactos ----------
+  -- feeds[] contiene EXCLUSIVAMENTE códigos que existen en results.code
+  -- (lo valida validate_seed.sql). El PRD describe G6/G7/G8/G9 con lenguaje
+  -- más suelto ("alimenta L5 y G9", "multiplica G1-G5", "alimenta EXPONER
+  -- digital"): esas relaciones no son códigos de resultado y se dejaron
+  -- fuera de feeds[] a propósito en vez de sembrar una referencia rota.
   insert into artifact_groups (user_id, code, title, feeds, target_week, starred) values
     (v_user_id, 'G1', 'Sistema de intake de research', array['L1'], 10, false),
     (v_user_id, 'G2', 'Repositorio de research útil', array['L4'], 17, false),
     (v_user_id, 'G3', 'Primer research end-to-end', array['L2'], 14, true),
     (v_user_id, 'G4', 'Test de usabilidad medido', array['L2', 'L3'], 11, false),
     (v_user_id, 'G5', 'Un experimento', array['L3'], 18, false),
-    (v_user_id, 'G6', 'Tablero de desarrollo', array['L5', 'G9'], 2, false),
+    (v_user_id, 'G6', 'Tablero de desarrollo', array['L5'], 2, false),
     (v_user_id, 'G7', 'Skills empaquetadas', array[]::text[], 10, false),
-    (v_user_id, 'G8', 'Contenido público', array['EXPONER'], null, false),
+    (v_user_id, 'G8', 'Contenido público', array[]::text[], null, false),
     (v_user_id, 'G9', 'Expediente', array['L6'], 19, false);
 
   -- ---------- Artefactos G1 (fase 1, salvo G1.7 = fase 2) ----------
@@ -147,6 +149,9 @@ begin
     (v_user_id, 'G7.3', 'G7', 'Skill: síntesis de notas crudas', array[]::text[], 'pending', 1, null);
 
   -- ---------- Artefactos G8 (fase según semana objetivo) ----------
+  -- artifacts no tiene columna target_week propia (solo artifact_groups la
+  -- tiene): la semana objetivo de cada post va en note. phase_number se
+  -- infiere de en qué fase cae esa semana según la tabla weeks.
   insert into artifacts (user_id, code, group_code, title, consumes, status, phase_number, note) values
     (v_user_id, 'G8.1', 'G8', 'Post 1', array[]::text[], 'pending', 1, 'Semana objetivo: 4'),
     (v_user_id, 'G8.2', 'G8', 'Post 2', array[]::text[], 'pending', 1, 'Semana objetivo: 6'),
@@ -161,16 +166,36 @@ begin
   insert into artifacts (user_id, code, group_code, title, consumes, status, phase_number, note) values
     (v_user_id, 'G9.1', 'G9', 'One-pager: 3 hitos con evidencia y número. Se compila del log', array[]::text[], 'pending', 2, null);
 
-  -- ---------- 8.7 Resultados ----------
-  insert into results (user_id, code, title, criterion, achieved, achieved_at, target_month) values
-    (v_user_id, 'L1', 'El proceso de intake está adoptado', '≥3 tickets entraron por el formulario y al menos 1 PO lo llenó sin ayuda', false, null, 'Octubre'),
-    (v_user_id, 'L2', 'Una decisión de producto se movió por mi research', 'Existe una decisión documentada que cambió, con un número mío detrás', false, null, 'Noviembre'),
-    (v_user_id, 'L3', 'Corrí un experimento', 'Hay hipótesis, test ejecutado y resultado medido. Resultado negativo cuenta igual', false, null, 'Diciembre'),
-    (v_user_id, 'L4', 'El repositorio se usa', 'Alguien que no soy yo consultó el repo y lo dijo', false, null, 'Noviembre'),
-    (v_user_id, 'L5', 'Reconocimiento explícito', 'Jhoanna u Omar citan mi trabajo frente a otros', false, null, 'Continuo'),
-    (v_user_id, 'L6', 'Cambio de puesto', 'Contrato renovado sin "Jr"', false, null, 'Enero 2027');
+  -- ---------- 8.3 Aprendizaje — A-ROL ----------
+  insert into learn_items (user_id, code, track, title, mode, block, source, status, target_week) values
+    (v_user_id, 'AR1', 'rol', 'Método de research y criterio de selección', 'bloque', 'A', 'Video "¿Cómo saber qué método y cuándo?" + Módulo 2 Colectivo 23', 'pending', null),
+    (v_user_id, 'AR2', 'rol', 'Entrevistas a usuarios', 'bloque', 'A', 'Video de entrevistas UX', 'pending', null),
+    (v_user_id, 'AR3', 'rol', 'Guerrilla testing y usabilidad', 'bloque', 'A', 'Platzi — curso Usabilidad UX', 'pending', null),
+    (v_user_id, 'AR4', 'rol', 'Síntesis: de notas crudas a insights', 'bloque', 'A', 'Uxcel affinity diagrams + User Interviews', 'pending', null),
+    (v_user_id, 'AR5', 'rol', 'Medición cuantitativa (SUS, success rate, time on task)', 'bloque', 'A', 'NN/g video SUS + Flat 101', 'pending', null),
+    (v_user_id, 'AR6', 'rol', 'Principios y heurísticas UX', 'bloque', 'A', '10 Leyes de Nielsen + growth.design + lawsofux', 'pending', null),
+    (v_user_id, 'AR7', 'rol', 'Behavior design y gamificación', 'bloque', 'B', 'Yu-kai Chou (Octalysis) + BJ Fogg', 'pending', null),
+    (v_user_id, 'AR8', 'rol', 'Comunicación de resultados', 'bloque', 'A', 'Módulo 7 Colectivo 23 + Aguayo', 'pending', null),
+    (v_user_id, 'AR9', 'rol', 'Figma y FigJam operativo', 'bloque', 'A', 'Videos Figma vs FigJam + Design System vs UI Kit', 'pending', null),
+    (v_user_id, 'AR10', 'rol', 'Fundamentos del negocio fintech (PGH, factoring, unit economics)', 'chamba', null, 'Preguntar internamente + Módulo 3 Colectivo 23', 'pending', null);
+
+  -- ---------- 8.4 Aprendizaje — A-MERCADO ----------
+  insert into learn_items (user_id, code, track, title, mode, block, source, status, target_week) values
+    (v_user_id, 'AM1', 'mercado', 'Inglés — input', 'tiempo_muerto', null, 'Podcasts de producto en traslado y gym', 'pending', null),
+    (v_user_id, 'AM2', 'mercado', 'Inglés — output', 'micro', null, '10 min post-almuerzo. Duolingo. Racha diaria', 'pending', null),
+    (v_user_id, 'AM3', 'mercado', 'SQL', 'bloque', 'A', 'Arranca en semana 23 (enero 2027)', 'pending', 23);
+
+  -- ---------- 8.5 Aprendizaje — A-TOOL ----------
+  insert into learn_items (user_id, code, track, title, mode, block, source, status, target_week) values
+    (v_user_id, 'AT1', 'tool', 'Proyectos con contexto persistente', 'bloque', 'B', null, 'pending', 2),
+    (v_user_id, 'AT2', 'tool', 'Skills (empaquetar formatos recurrentes)', 'bloque', 'B', null, 'pending', 5),
+    (v_user_id, 'AT3', 'tool', 'Conexiones / MCP (Drive, Calendar, Jira)', 'bloque', 'B', null, 'pending', 10),
+    (v_user_id, 'AT4', 'tool', 'Automatizaciones', 'bloque', 'B', null, 'pending', 16),
+    (v_user_id, 'AT5', 'tool', 'Prompting para research (detección de sesgos)', 'bloque', 'B', 'Permanente', 'pending', null);
 
   -- ---------- 8.8 Conexiones ----------
+  -- serves[] queda vacío: la sección 8.8 del PRD no trae esa columna con
+  -- datos; se deja listo para llenarse a mano sin romper el validador.
   insert into connections (user_id, code, person, role, unlocks, serves, target_month, status, unlocked_note) values
     (v_user_id, 'CN1', 'Jadira Mellado', 'Strategic Research (par)', 'Cómo funciona el área en la práctica y qué esperan de un entregable', array[]::text[], 'Agosto', 'pending', null),
     (v_user_id, 'CN2', 'Cesar Altamirano', 'Product Analytics Specialist', 'La data y la fórmula de impacto en S/', array[]::text[], 'Agosto', 'pending', null),
@@ -185,11 +210,18 @@ begin
     (v_user_id, 'CN11', 'Ariana Morales', 'Head of Product', 'Visibilidad ante quien firma', array[]::text[], 'Diciembre', 'pending', null);
 
   -- ---------- 8.9 Exposiciones ----------
-  insert into exposures (user_id, code, type, required_output, cap_per_month, target_total) values
+  -- target_note es orientativo ("4-6", "1 antes de diciembre"), nunca un
+  -- tope. El tope real y numérico es cap_per_month.
+  insert into exposures (user_id, code, type, required_output, cap_per_month, target_note) values
     (v_user_id, 'EX1', 'Evento del ecosistema (meetup, panel, demo day)', '1 insight traído al equipo + 1 contacto nuevo con nombre', 2, '4-6'),
     (v_user_id, 'EX2', 'Evento de producto / UX / research', '1 aprendizaje aplicable a un artefacto en curso', 2, '2-3'),
     (v_user_id, 'EX3', 'Hackathon', 'Prototipo + experimento medido (→ G5)', null, '1-2 en el semestre'),
     (v_user_id, 'EX4', 'Facilitar o hablar en un evento', 'Charla dada + material propio (→ G8)', null, '1 antes de diciembre');
+
+  -- ---------- 8.12 Rachas (estado inicial) ----------
+  insert into streaks (user_id, kind, current, longest, last_marked, freezes_total, freezes_used, quarter) values
+    (v_user_id, 'daily_english', 0, 0, null, 2, 0, '2026-Q3'),
+    (v_user_id, 'weekly_log', 0, 0, null, 2, 0, '2026-Q3');
 
   -- ---------- 8.11 Quests semana 2 ----------
   insert into quests (user_id, week_number, type, title, ref_code, done) values
@@ -197,10 +229,5 @@ begin
     (v_user_id, 2, 'aprender', 'Bloque A: video de método + 10 leyes de Nielsen · Bloque B: AT1', 'AR1, AR6, AT1', false),
     (v_user_id, 2, 'conectar', 'CN1 Jadira', 'CN1', false),
     (v_user_id, 2, 'bonus', '—', null, false);
-
-  -- ---------- 8.12 Rachas (estado inicial) ----------
-  insert into streaks (user_id, kind, current, longest, last_marked, freezes_total, freezes_used, quarter) values
-    (v_user_id, 'daily_english', 0, 0, null, 2, 0, '2026-Q3'),
-    (v_user_id, 'weekly_log', 0, 0, null, 2, 0, '2026-Q3');
 
 end $$;

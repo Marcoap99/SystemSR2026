@@ -1,6 +1,17 @@
 -- =========================================================
 -- Plataforma de Desarrollo Personal — esquema inicial
 -- PRD sección 5. Un solo usuario, RLS por user_id = auth.uid().
+--
+-- Toda la aritmética de fechas de la app (racha, semana actual, contador
+-- regresivo) se hace en America/Lima vía una única función today() en
+-- lib/domain/dates.ts — no hay lógica de zona horaria en SQL.
+--
+-- Ruta de migración de `code` (V2, fuera de alcance ahora): hoy `code` es
+-- `unique` global por tabla porque hay un solo usuario y un solo plan. Si
+-- en el futuro se necesita una temporada/plan nuevo reutilizando códigos
+-- (AR1, G1, ...), la migración correcta es agregar una columna
+-- `season text` (o `plan_id`) y mover el `unique` a `unique(season, code)`
+-- — NO a `unique(user_id, code)`, porque seguiría siendo el mismo usuario.
 -- =========================================================
 
 create extension if not exists pgcrypto;
@@ -120,8 +131,12 @@ create table connections (
 );
 
 -- ---------- exposures ----------
--- target_total es texto ("4-6", "1 antes de diciembre"): son metas
--- orientativas, no un tope. El tope real que sí es numérico es cap_per_month.
+-- target_note es texto ("4-6", "1 antes de diciembre"): es una meta
+-- orientativa, nunca un tope. Se llama target_note (no target_total) a
+-- propósito — P9 prohíbe mostrar techos como cuota ("n/máximo"), y un
+-- campo int con nombre "total" invita a construir esa barra tarde o
+-- temprano. El tope real y numérico, el único que puede deshabilitar un
+-- botón, es cap_per_month.
 create table exposures (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -130,7 +145,7 @@ create table exposures (
   type text not null,
   required_output text not null,
   cap_per_month int,
-  target_total text
+  target_note text
 );
 
 -- ---------- exposure_events ----------
@@ -176,13 +191,16 @@ create table streaks (
 );
 
 -- ---------- streak_events ----------
+-- unique(kind, period): idempotencia. Marcar dos veces el mismo día (o la
+-- misma semana, para weekly_log) no debe poder insertar dos eventos.
 create table streak_events (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   user_id uuid not null default auth.uid() references auth.users(id),
   kind text not null references streaks(kind),
   period date not null,
-  action text not null check (action in ('marked', 'freeze', 'missed'))
+  action text not null check (action in ('marked', 'freeze', 'missed')),
+  unique (user_id, kind, period)
 );
 
 -- ---------- log_entries ----------
@@ -199,8 +217,11 @@ create table log_entries (
 );
 
 -- ---------- app_events ----------
--- Instrumentación. event_type queda libre (sin CHECK) para no bloquear
--- telemetría futura; los tipos de referencia están documentados en el PRD 5.
+-- Instrumentación. event_type queda libre (sin CHECK): un CHECK en
+-- telemetría es un antipatrón (un evento nuevo o tira excepción en
+-- producción o se pierde en silencio). Tipos conocidos hoy (PRD 5):
+-- app_open, section_view, log_created, streak_marked, freeze_used,
+-- artifact_done, result_achieved. Nuevos tipos se agregan sin migración.
 create table app_events (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -222,8 +243,9 @@ create index idx_connections_status on connections(status);
 create index idx_exposure_events_exposure_code on exposure_events(exposure_code);
 create index idx_exposure_events_date on exposure_events(date);
 create index idx_quests_week_number on quests(week_number);
-create index idx_streak_events_kind_period on streak_events(kind, period);
+-- (kind, period) ya queda indexado por el unique(user_id, kind, period) de arriba.
 create index idx_log_entries_week_number on log_entries(week_number);
 create index idx_log_entries_date on log_entries(date);
-create index idx_app_events_event_type on app_events(event_type);
-create index idx_app_events_created_at on app_events(created_at);
+-- Compuesto (no dos índices separados): la retro de diciembre (G6.3)
+-- consulta "este tipo de evento a lo largo del tiempo", no cada campo solo.
+create index idx_app_events_type_created_at on app_events(event_type, created_at);
