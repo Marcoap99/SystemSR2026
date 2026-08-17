@@ -4,6 +4,13 @@
  * conectado todavía para generarlos con `supabase gen types`; cuando lo
  * haya, este archivo se puede reemplazar por la salida de ese comando
  * (la forma pública `Database` es compatible).
+ *
+ * Los "Row" son `type`, no `interface`, a propósito: @supabase/postgrest-js
+ * exige que cada tabla (`GenericTable`) tenga `Row/Insert/Update extends
+ * Record<string, unknown>`, y una `interface` NO satisface esa constraint
+ * aunque tenga exactamente las mismas propiedades que un `type` — es una
+ * diferencia real de TypeScript, no un capricho de estilo. Con `interface`
+ * acá, `.from("tabla").select("*")` se resuelve en silencio a `never`.
  */
 
 export type LoadKind = "alta" | "media" | "colchon" | "fiestas";
@@ -18,7 +25,7 @@ export type StreakKindDb = "daily_english" | "weekly_log";
 export type StreakEventAction = "marked" | "freeze" | "missed";
 export type BossStatus = "pending" | "won" | "lost";
 
-export interface Phase {
+export type Phase = {
   id: string;
   created_at: string;
   user_id: string;
@@ -27,9 +34,9 @@ export interface Phase {
   rule: string;
   unlocked: boolean;
   unlocked_by_boss: number | null;
-}
+};
 
-export interface Boss {
+export type Boss = {
   id: string;
   created_at: string;
   user_id: string;
@@ -38,9 +45,9 @@ export interface Boss {
   date: string;
   criterion: string;
   status: BossStatus;
-}
+};
 
-export interface Week {
+export type Week = {
   id: string;
   created_at: string;
   user_id: string;
@@ -51,9 +58,9 @@ export interface Week {
   focus: string;
   load: LoadKind;
   note: string | null;
-}
+};
 
-export interface LearnItem {
+export type LearnItem = {
   id: string;
   created_at: string;
   user_id: string;
@@ -66,9 +73,9 @@ export interface LearnItem {
   source: string | null;
   status: ItemStatus;
   target_week: number | null;
-}
+};
 
-export interface ArtifactGroup {
+export type ArtifactGroup = {
   id: string;
   created_at: string;
   user_id: string;
@@ -77,9 +84,9 @@ export interface ArtifactGroup {
   feeds: string[];
   target_week: number | null;
   starred: boolean;
-}
+};
 
-export interface Artifact {
+export type Artifact = {
   id: string;
   created_at: string;
   user_id: string;
@@ -90,9 +97,9 @@ export interface Artifact {
   status: ArtifactStatus;
   phase_number: number;
   note: string | null;
-}
+};
 
-export interface Result {
+export type Result = {
   id: string;
   created_at: string;
   user_id: string;
@@ -102,9 +109,9 @@ export interface Result {
   achieved: boolean;
   achieved_at: string | null;
   target_month: string | null;
-}
+};
 
-export interface Connection {
+export type Connection = {
   id: string;
   created_at: string;
   user_id: string;
@@ -116,9 +123,9 @@ export interface Connection {
   target_month: string | null;
   status: ConnectionStatus;
   unlocked_note: string | null;
-}
+};
 
-export interface Exposure {
+export type Exposure = {
   id: string;
   created_at: string;
   user_id: string;
@@ -127,9 +134,9 @@ export interface Exposure {
   required_output: string;
   cap_per_month: number | null;
   target_note: string | null;
-}
+};
 
-export interface ExposureEvent {
+export type ExposureEvent = {
   id: string;
   created_at: string;
   user_id: string;
@@ -138,9 +145,9 @@ export interface ExposureEvent {
   name: string;
   output: string | null;
   counts: boolean; // columna generada
-}
+};
 
-export interface Quest {
+export type Quest = {
   id: string;
   created_at: string;
   user_id: string;
@@ -149,9 +156,9 @@ export interface Quest {
   title: string;
   ref_code: string | null;
   done: boolean;
-}
+};
 
-export interface Streak {
+export type Streak = {
   id: string;
   created_at: string;
   user_id: string;
@@ -162,18 +169,18 @@ export interface Streak {
   freezes_total: number;
   freezes_used: number;
   quarter: string;
-}
+};
 
-export interface StreakEvent {
+export type StreakEvent = {
   id: string;
   created_at: string;
   user_id: string;
   kind: StreakKindDb;
   period: string;
   action: StreakEventAction;
-}
+};
 
-export interface LogEntry {
+export type LogEntry = {
   id: string;
   created_at: string;
   user_id: string;
@@ -182,19 +189,24 @@ export interface LogEntry {
   what: string;
   evidence: string;
   ref_code: string | null;
-}
+};
 
-export interface AppEvent {
+export type AppEvent = {
   id: string;
   created_at: string;
   user_id: string;
   event_type: string;
   payload: Record<string, unknown>;
-}
+};
 
 // ---------------------------------------------------------------------
 // Forma "Database" al estilo del cliente tipado de Supabase. Insert/Update
 // se derivan de Row a mano (Omit de las columnas con default + Partial).
+//
+// `Relationships: []` en cada tabla y `Views`/`Functions` vacíos a nivel
+// de schema no son adorno: @supabase/postgrest-js exige esa forma exacta
+// (GenericTable / GenericSchema) para que la inferencia de `.from(...)`
+// funcione.
 // ---------------------------------------------------------------------
 type WithDefaults = "id" | "created_at" | "user_id";
 
@@ -207,90 +219,45 @@ type InsertOf<
 
 type UpdateOf<Row> = Partial<Row>;
 
-export interface Database {
+type TableOf<
+  Row extends Record<WithDefaults, unknown>,
+  OptionalAlsoKeys extends keyof Row = never,
+> = {
+  Row: Row;
+  Insert: InsertOf<Row, OptionalAlsoKeys>;
+  Update: UpdateOf<Row>;
+  Relationships: [];
+};
+
+export type Database = {
   public: {
     Tables: {
-      phases: {
-        Row: Phase;
-        Insert: InsertOf<Phase, "unlocked" | "unlocked_by_boss">;
-        Update: UpdateOf<Phase>;
-      };
-      bosses: {
-        Row: Boss;
-        Insert: InsertOf<Boss, "status">;
-        Update: UpdateOf<Boss>;
-      };
-      weeks: {
-        Row: Week;
-        Insert: InsertOf<Week, "focus" | "note">;
-        Update: UpdateOf<Week>;
-      };
-      learn_items: {
-        Row: LearnItem;
-        Insert: InsertOf<LearnItem, "block" | "chain" | "source" | "status" | "target_week">;
-        Update: UpdateOf<LearnItem>;
-      };
-      artifact_groups: {
-        Row: ArtifactGroup;
-        Insert: InsertOf<ArtifactGroup, "feeds" | "target_week" | "starred">;
-        Update: UpdateOf<ArtifactGroup>;
-      };
-      artifacts: {
-        Row: Artifact;
-        Insert: InsertOf<Artifact, "consumes" | "status" | "note">;
-        Update: UpdateOf<Artifact>;
-      };
-      results: {
-        Row: Result;
-        Insert: InsertOf<Result, "achieved" | "achieved_at" | "target_month">;
-        Update: UpdateOf<Result>;
-      };
-      connections: {
-        Row: Connection;
-        Insert: InsertOf<
-          Connection,
-          "role" | "unlocks" | "serves" | "target_month" | "status" | "unlocked_note"
-        >;
-        Update: UpdateOf<Connection>;
-      };
-      exposures: {
-        Row: Exposure;
-        Insert: InsertOf<Exposure, "cap_per_month" | "target_note">;
-        Update: UpdateOf<Exposure>;
-      };
-      exposure_events: {
-        Row: ExposureEvent;
-        Insert: InsertOf<ExposureEvent, "date" | "output" | "counts">;
-        Update: UpdateOf<ExposureEvent>;
-      };
-      quests: {
-        Row: Quest;
-        Insert: InsertOf<Quest, "ref_code" | "done">;
-        Update: UpdateOf<Quest>;
-      };
-      streaks: {
-        Row: Streak;
-        Insert: InsertOf<
-          Streak,
-          "current" | "longest" | "last_marked" | "freezes_total" | "freezes_used"
-        >;
-        Update: UpdateOf<Streak>;
-      };
-      streak_events: {
-        Row: StreakEvent;
-        Insert: InsertOf<StreakEvent>;
-        Update: UpdateOf<StreakEvent>;
-      };
-      log_entries: {
-        Row: LogEntry;
-        Insert: InsertOf<LogEntry, "date" | "ref_code">;
-        Update: UpdateOf<LogEntry>;
-      };
-      app_events: {
-        Row: AppEvent;
-        Insert: InsertOf<AppEvent, "payload">;
-        Update: UpdateOf<AppEvent>;
-      };
+      phases: TableOf<Phase, "unlocked" | "unlocked_by_boss">;
+      bosses: TableOf<Boss, "status">;
+      weeks: TableOf<Week, "focus" | "note">;
+      learn_items: TableOf<
+        LearnItem,
+        "block" | "chain" | "source" | "status" | "target_week"
+      >;
+      artifact_groups: TableOf<ArtifactGroup, "feeds" | "target_week" | "starred">;
+      artifacts: TableOf<Artifact, "consumes" | "status" | "note">;
+      results: TableOf<Result, "achieved" | "achieved_at" | "target_month">;
+      connections: TableOf<
+        Connection,
+        "role" | "unlocks" | "serves" | "target_month" | "status" | "unlocked_note"
+      >;
+      exposures: TableOf<Exposure, "cap_per_month" | "target_note">;
+      exposure_events: TableOf<ExposureEvent, "date" | "output" | "counts">;
+      quests: TableOf<Quest, "ref_code" | "done">;
+      streaks: TableOf<
+        Streak,
+        "current" | "longest" | "last_marked" | "freezes_total" | "freezes_used"
+      >;
+      streak_events: TableOf<StreakEvent>;
+      log_entries: TableOf<LogEntry, "date" | "ref_code">;
+      app_events: TableOf<AppEvent, "payload">;
     };
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
   };
-}
+};
