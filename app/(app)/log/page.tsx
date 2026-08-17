@@ -5,7 +5,7 @@ export default function LogPage() {
     <Card>
       <h1 className="text-xl font-semibold text-text">Log</h1>
       <p className="mt-2 text-sm text-text-muted">
-        La tabla completa y el botón "Compilar expediente" se construyen en el siguiente paso.
+        La tabla completa y el botón &ldquo;Compilar expediente&rdquo; se construyen en el siguiente paso.
       </p>
     </Card>
   );
