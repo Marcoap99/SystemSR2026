@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { updateResourceNotesAction, updateResourceStatusAction } from "@/lib/actions/resources";
+import { useState, useTransition, type KeyboardEvent } from "react";
+import { updateResourceStatusAction } from "@/lib/actions/resources";
+import { NotesModal } from "@/components/notes/NotesModal";
 import type { ItemStatus, Resource, ResourceFormat, ResourceLanguage, ResourceTier } from "@/lib/types";
 
 const STATUS_CYCLE: ItemStatus[] = ["pending", "in_progress", "done"];
@@ -38,92 +39,88 @@ const TIER_LABEL: Record<ResourceTier, string> = {
 };
 
 /**
- * Bloque A: una tarjeta por recurso — chips, toggle de estado inline,
- * notas expandibles. V1.2: si el learn_item padre está bloqueado por
- * dependencia, el link sigue abriendo (es solo lectura, no hace daño
- * dejar mirar), pero no se puede marcar estado ni tocar la nota.
+ * Bloque A (V1.1) + V1.2 (lock por dependencia) + V1.3 (parche notas):
+ * toda la tarjeta abre el bloc de notas -- el enlace externo se movió
+ * adentro del modal (sección 6), así el click principal siempre es
+ * "abrir mi espacio de trabajo", no "irme a otro sitio". El chip de
+ * estado se queda afuera (como ya era) para poder cambiarlo sin abrir
+ * el modal -- por eso la tarjeta no puede ser un <button> real (no se
+ * puede anidar un botón dentro de otro), es un div con role="button".
  */
 export function ResourceCard({ resource, locked = false }: { resource: Resource; locked?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState(resource.status);
   const [pending, startTransition] = useTransition();
-  const [notesOpen, setNotesOpen] = useState(false);
-  const [notesValue, setNotesValue] = useState(resource.notes ?? "");
 
   function cycleStatus() {
-    const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(resource.status) + 1) % STATUS_CYCLE.length]!;
+    const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(status) + 1) % STATUS_CYCLE.length]!;
+    setStatus(next);
     startTransition(() => updateResourceStatusAction(resource.id, next));
   }
 
-  function saveNotes() {
-    if (notesValue === (resource.notes ?? "")) return;
-    startTransition(() => updateResourceNotesAction(resource.id, notesValue));
+  function handleCardKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setOpen(true);
+    }
   }
 
   return (
-    <div className={"flex flex-col gap-2 rounded-card border border-border bg-bg p-3 " + (locked ? "opacity-60" : "")}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          {resource.url ? (
-            <a
-              href={resource.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-text hover:text-brand hover:underline"
-            >
-              {resource.title}
-            </a>
-          ) : (
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+        onKeyDown={handleCardKeyDown}
+        className={
+          "flex w-full cursor-pointer flex-col gap-2 rounded-card border border-border bg-bg p-3 text-left transition-colors hover:border-brand/40 " +
+          (locked ? "opacity-60" : "")
+        }
+      >
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-text">{resource.title}</p>
-          )}
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-text-muted">
-            <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{FORMAT_LABEL[resource.format]}</span>
-            {resource.language ? (
-              <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">
-                {LANGUAGE_LABEL[resource.language]}
-              </span>
-            ) : null}
-            {resource.duration_min ? (
-              <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{resource.duration_min} min</span>
-            ) : null}
-            {resource.week ? (
-              <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">Semana {resource.week}</span>
-            ) : null}
-            <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{TIER_LABEL[resource.tier]}</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-text-muted">
+              <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{FORMAT_LABEL[resource.format]}</span>
+              {resource.language ? (
+                <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">
+                  {LANGUAGE_LABEL[resource.language]}
+                </span>
+              ) : null}
+              {resource.duration_min ? (
+                <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{resource.duration_min} min</span>
+              ) : null}
+              {resource.week ? (
+                <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">Semana {resource.week}</span>
+              ) : null}
+              <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{TIER_LABEL[resource.tier]}</span>
+            </div>
           </div>
+
+          <button
+            type="button"
+            disabled={pending || locked}
+            onClick={(e) => {
+              e.stopPropagation();
+              cycleStatus();
+            }}
+            className={`shrink-0 rounded-badge px-2 py-0.5 text-xs font-medium transition-opacity disabled:opacity-60 ${STATUS_CLASSES[status]}`}
+            title={locked ? "Bloqueado" : "Cambiar estado"}
+          >
+            {STATUS_LABEL[status]}
+          </button>
         </div>
 
-        <button
-          type="button"
-          disabled={pending || locked}
-          onClick={cycleStatus}
-          className={`shrink-0 rounded-badge px-2 py-0.5 text-xs font-medium transition-opacity disabled:opacity-60 ${STATUS_CLASSES[resource.status]}`}
-          title={locked ? "Bloqueado" : "Cambiar estado"}
-        >
-          {STATUS_LABEL[resource.status]}
-        </button>
-      </div>
-
-      <div>
-        <button
-          type="button"
-          disabled={locked}
-          onClick={() => setNotesOpen((v) => !v)}
-          className="text-xs text-text-muted hover:text-text disabled:hover:text-text-muted"
-        >
-          {notesOpen ? "Ocultar notas" : resource.notes ? "Ver notas" : "+ Notas"}
-        </button>
-        {notesOpen ? (
-          <textarea
-            value={notesValue}
-            onChange={(e) => setNotesValue(e.target.value)}
-            onBlur={saveNotes}
-            disabled={pending || locked}
-            placeholder="Nota personal sobre este recurso..."
-            rows={2}
-            className="mt-1.5 w-full rounded-card border border-border bg-surface p-2 text-xs text-text outline-none focus:border-brand disabled:opacity-60"
-          />
+        {/* V1.3: la nota es la prueba (Regla 1) -- sin estado vacío ruidoso si no hay nada escrito todavía. */}
+        {resource.notes_word_count > 0 ? (
+          <p className="text-xs text-text-muted">
+            📝 <span className="font-mono tabular-nums">{resource.notes_word_count}</span> palabras
+          </p>
         ) : null}
       </div>
-    </div>
+
+      {open ? <NotesModal resource={resource} locked={locked} onClose={() => setOpen(false)} /> : null}
+    </>
   );
 }

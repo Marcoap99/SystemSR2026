@@ -9,6 +9,7 @@ import { ThemeToggle } from "./ThemeToggle";
 const LINKS = [
   { href: "/", label: "Panel", accent: null },
   { href: "/aprender", label: "Aprender", accent: "aprender" },
+  { href: "/notas", label: "Notas", accent: "aprender" },
   { href: "/conectar", label: "Conectar", accent: "conectar" },
   { href: "/exponer", label: "Exponer", accent: "exponer" },
   { href: "/log", label: "Log", accent: null },

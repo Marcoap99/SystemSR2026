@@ -81,9 +81,12 @@ set
 from docs d
 where r.id = d.id;
 
--- 4) Búsqueda full-text (sección 7 del parche).
+-- 4) Búsqueda full-text (sección 7 del parche). La expresión del índice
+--    tiene que calzar exacto con la que arma PostgREST para
+--    `.textSearch()` (to_tsvector('spanish', notes_plain), sin coalesce)
+--    o el planner no lo va a poder usar.
 create index idx_resources_notes_plain_fts
-  on resources using gin (to_tsvector('spanish', coalesce(notes_plain, '')));
+  on resources using gin (to_tsvector('spanish', notes_plain));
 
 -- =========================================================
 -- Storage: bucket privado para capturas pegadas en las notas

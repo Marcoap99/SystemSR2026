@@ -92,6 +92,24 @@ export type LearnItem = {
   blocked_by: string | null;
 };
 
+// V1.3 — documento del editor de notas (BlockNote). Se tipa genérico acá
+// (sin importar @blocknote/core desde lib/) para que la capa de datos y
+// las funciones de dominio no dependan de la librería del editor.
+export type NoteInlineContent = {
+  type: string;
+  text?: string;
+  styles?: Record<string, unknown>;
+  content?: NoteInlineContent[];
+};
+export type NoteBlock = {
+  id: string;
+  type: string;
+  props: Record<string, unknown>;
+  content: NoteInlineContent[] | unknown;
+  children: NoteBlock[];
+};
+export type NoteDocument = NoteBlock[];
+
 export type Resource = {
   id: string;
   created_at: string;
@@ -105,7 +123,17 @@ export type Resource = {
   week: number | null;
   tier: ResourceTier;
   status: ItemStatus;
-  notes: string | null;
+  // V1.3 — reemplaza el textarea plano por un documento BlockNote.
+  // notes_legacy conserva el texto original (nunca se borra, sección 1
+  // del parche V1.3); has_notes es una columna generada, de solo
+  // lectura.
+  notes: NoteDocument | null;
+  notes_legacy: string | null;
+  notes_updated_at: string | null;
+  notes_word_count: number;
+  notes_plain: string | null;
+  notes_id: string;
+  has_notes: boolean;
   sort_order: number;
 };
 
@@ -280,7 +308,19 @@ export type Database = {
       >;
       resources: TableOf<
         Resource,
-        "url" | "language" | "duration_min" | "week" | "status" | "notes" | "sort_order"
+        | "url"
+        | "language"
+        | "duration_min"
+        | "week"
+        | "status"
+        | "notes"
+        | "notes_legacy"
+        | "notes_updated_at"
+        | "notes_word_count"
+        | "notes_plain"
+        | "notes_id"
+        | "has_notes"
+        | "sort_order"
       >;
       artifact_groups: TableOf<ArtifactGroup, "feeds" | "target_week" | "starred" | "note">;
       artifacts: TableOf<Artifact, "consumes" | "status" | "note" | "blocked_by">;

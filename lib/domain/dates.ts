@@ -133,6 +133,14 @@ export function formatShortEs(iso: string): string {
 }
 
 /** "10/11/2026" */
+/** V1.3 — "hoy" / "ayer" / "hace N días", para las tarjetas de /notas. */
+export function relativeDaysEs(iso: string, todayISO: string): string {
+  const days = diffDays(iso, todayISO);
+  if (days <= 0) return "hoy";
+  if (days === 1) return "ayer";
+  return `hace ${days} días`;
+}
+
 export function formatDMY(iso: string): string {
   const [y, m, d] = iso.split("-") as [string, string, string];
   return `${d}/${m}/${y}`;
