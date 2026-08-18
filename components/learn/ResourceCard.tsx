@@ -37,8 +37,13 @@ const TIER_LABEL: Record<ResourceTier, string> = {
   archivo: "Archivo",
 };
 
-/** Bloque A: una tarjeta por recurso — chips, toggle de estado inline, notas expandibles. */
-export function ResourceCard({ resource }: { resource: Resource }) {
+/**
+ * Bloque A: una tarjeta por recurso — chips, toggle de estado inline,
+ * notas expandibles. V1.2: si el learn_item padre está bloqueado por
+ * dependencia, el link sigue abriendo (es solo lectura, no hace daño
+ * dejar mirar), pero no se puede marcar estado ni tocar la nota.
+ */
+export function ResourceCard({ resource, locked = false }: { resource: Resource; locked?: boolean }) {
   const [pending, startTransition] = useTransition();
   const [notesOpen, setNotesOpen] = useState(false);
   const [notesValue, setNotesValue] = useState(resource.notes ?? "");
@@ -54,7 +59,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-border bg-bg p-3">
+    <div className={"flex flex-col gap-2 rounded-card border border-border bg-bg p-3 " + (locked ? "opacity-60" : "")}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {resource.url ? (
@@ -89,10 +94,10 @@ export function ResourceCard({ resource }: { resource: Resource }) {
 
         <button
           type="button"
-          disabled={pending}
+          disabled={pending || locked}
           onClick={cycleStatus}
           className={`shrink-0 rounded-badge px-2 py-0.5 text-xs font-medium transition-opacity disabled:opacity-60 ${STATUS_CLASSES[resource.status]}`}
-          title="Cambiar estado"
+          title={locked ? "Bloqueado" : "Cambiar estado"}
         >
           {STATUS_LABEL[resource.status]}
         </button>
@@ -101,8 +106,9 @@ export function ResourceCard({ resource }: { resource: Resource }) {
       <div>
         <button
           type="button"
+          disabled={locked}
           onClick={() => setNotesOpen((v) => !v)}
-          className="text-xs text-text-muted hover:text-text"
+          className="text-xs text-text-muted hover:text-text disabled:hover:text-text-muted"
         >
           {notesOpen ? "Ocultar notas" : resource.notes ? "Ver notas" : "+ Notas"}
         </button>
@@ -111,7 +117,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
             value={notesValue}
             onChange={(e) => setNotesValue(e.target.value)}
             onBlur={saveNotes}
-            disabled={pending}
+            disabled={pending || locked}
             placeholder="Nota personal sobre este recurso..."
             rows={2}
             className="mt-1.5 w-full rounded-card border border-border bg-surface p-2 text-xs text-text outline-none focus:border-brand disabled:opacity-60"

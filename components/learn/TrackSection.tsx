@@ -40,7 +40,14 @@ export function TrackSection({
 
       <div className="mt-4 flex flex-col gap-3">
         {visibleItems.map((g) => (
-          <LearnCodeGroup key={g.item.code} item={g.item} resources={g.resources} progress={g.progress} />
+          <LearnCodeGroup
+            key={g.item.code}
+            item={g.item}
+            resources={g.resources}
+            progress={g.progress}
+            locked={g.locked}
+            lockReason={g.lockReason}
+          />
         ))}
       </div>
     </Card>

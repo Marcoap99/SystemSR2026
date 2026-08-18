@@ -66,6 +66,12 @@ export function HowItWorks() {
           </div>
         ))}
       </div>
+
+      {/* V1.2 — nota de versión (patch sección 6). */}
+      <p className="mt-4 border-t border-border pt-4 text-xs text-text-muted">
+        <span className="font-mono">v1.2</span> — Repriorización: gamificación y behavior design pasan a
+        prioridad 1 por pedido del área. AR11 (IA aplicada a research) se pospone a Q1 2027.
+      </p>
     </Card>
   );
 }

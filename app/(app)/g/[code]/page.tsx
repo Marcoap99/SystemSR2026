@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ArtifactRow } from "@/components/group/ArtifactRow";
 import { getGroupDetailData } from "@/lib/data/group-detail";
-import { isPhaseLocked, lockTooltip } from "@/lib/domain/phases";
 
 export const dynamic = "force-dynamic";
 
@@ -49,27 +48,23 @@ export default async function GroupDetailPage({
             Alimenta: {data.feedsResults.map((r) => `${r.code} — ${r.title}`).join(" · ")}
           </p>
         ) : null}
+
+        {/* V1.2: nota fija del grupo (p. ej. G10 explicando por qué G10.4 es el diferencial). */}
+        {data.group.note ? <p className="mt-3 text-sm text-text-muted italic">{data.group.note}</p> : null}
       </Card>
 
       <Card>
         <h2 className="text-lg font-semibold text-text">Artefactos</h2>
         <div className="mt-4 flex flex-col gap-3">
-          {data.artifacts.map((artifact) => {
-            const locked = isPhaseLocked(artifact.phase_number, data.phases);
-            const consumedTitles = artifact.consumes
-              .map((c) => data.learnItemsByCode[c]?.title)
-              .filter((title): title is string => Boolean(title));
-
-            return (
-              <ArtifactRow
-                key={artifact.code}
-                artifact={artifact}
-                consumedTitles={consumedTitles}
-                locked={locked}
-                lockReason={locked ? lockTooltip(artifact.phase_number, data.phases, data.bosses) : null}
-              />
-            );
-          })}
+          {data.artifacts.map(({ artifact, consumedTitles, locked, lockReason }) => (
+            <ArtifactRow
+              key={artifact.code}
+              artifact={artifact}
+              consumedTitles={consumedTitles}
+              locked={locked}
+              lockReason={lockReason}
+            />
+          ))}
         </div>
       </Card>
     </div>

@@ -15,7 +15,7 @@
 
 export type LoadKind = "alta" | "media" | "colchon" | "fiestas";
 export type LearnTrack = "rol" | "mercado" | "tool";
-export type LearnMode = "bloque" | "chamba" | "tiempo_muerto" | "micro";
+export type LearnMode = "bloque" | "chamba" | "tiempo_muerto" | "micro" | "just_in_time";
 export type LearnBlock = "A" | "B" | "C";
 export type ItemStatus = "pending" | "in_progress" | "done";
 export type ResourceFormat =
@@ -87,6 +87,9 @@ export type LearnItem = {
   source: string | null;
   status: ItemStatus;
   target_week: number | null;
+  // V1.2 — repriorización por gamificación.
+  priority: number;
+  blocked_by: string | null;
 };
 
 export type Resource = {
@@ -115,6 +118,8 @@ export type ArtifactGroup = {
   feeds: string[];
   target_week: number | null;
   starred: boolean;
+  // V1.2 — nota fija de la ficha del grupo (p. ej. G10).
+  note: string | null;
 };
 
 export type Artifact = {
@@ -128,6 +133,9 @@ export type Artifact = {
   status: ArtifactStatus;
   phase_number: number;
   note: string | null;
+  // V1.2 — dependencia de otro artifact o learn_item (código, sin FK:
+  // puede apuntar a cualquiera de las dos tablas).
+  blocked_by: string | null;
 };
 
 export type Result = {
@@ -268,14 +276,14 @@ export type Database = {
       weeks: TableOf<Week, "focus" | "note">;
       learn_items: TableOf<
         LearnItem,
-        "block" | "chain" | "source" | "status" | "target_week"
+        "block" | "chain" | "source" | "status" | "target_week" | "priority" | "blocked_by"
       >;
       resources: TableOf<
         Resource,
         "url" | "language" | "duration_min" | "week" | "status" | "notes" | "sort_order"
       >;
-      artifact_groups: TableOf<ArtifactGroup, "feeds" | "target_week" | "starred">;
-      artifacts: TableOf<Artifact, "consumes" | "status" | "note">;
+      artifact_groups: TableOf<ArtifactGroup, "feeds" | "target_week" | "starred" | "note">;
+      artifacts: TableOf<Artifact, "consumes" | "status" | "note" | "blocked_by">;
       results: TableOf<Result, "achieved" | "achieved_at" | "target_month">;
       connections: TableOf<
         Connection,

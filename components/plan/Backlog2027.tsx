@@ -3,6 +3,12 @@ import { Card } from "@/components/ui/Card";
 const BACKLOG = [
   { item: "AM3 — SQL", when: "ene 2027", note: "Arranca cuando el inglés output tome su ritmo" },
   { item: "AM2 — Inglés output (conversación)", when: "ene 2027", note: "Bloque A, cuando SQL libere" },
+  {
+    item: "AR11 — IA aplicada a research y UX",
+    when: "Q1 2027",
+    note: "Pospuesto por priorización de gamificación. Requiere AR4 cerrado. Fuente base: curso Inspiratech 2026",
+  },
+  { item: "AT5 — Prompting para research", when: "Q1 2027", note: "Se fusiona con AR11" },
   { item: "Métricas de producto", when: "Q1 2027", note: "Funnel, cohortes, retención" },
   { item: "Diseño de experimentos (formal)", when: "Q1 2027", note: "" },
   { item: "Research cuantitativo aplicado", when: "Q1 2027", note: "Muestreo, validez" },

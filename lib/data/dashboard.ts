@@ -106,7 +106,14 @@ export async function getDashboardData(): Promise<DashboardData> {
     streaks[row.kind] = row;
   }
 
-  const groupsWithProgress = (groups ?? []).map((group) => {
+  // V1.2: `.order("code")` en la query de arriba ordena como texto --
+  // con G10 en el medio eso da G1, G10, G2, G3... (la comparación de
+  // strings trata "G10" como más chico que "G2"). Reordenar acá por el
+  // número real.
+  const sortedGroups = [...(groups ?? [])].sort(
+    (a, b) => Number(a.code.slice(1)) - Number(b.code.slice(1)),
+  );
+  const groupsWithProgress = sortedGroups.map((group) => {
     const items: Artifact[] = (artifacts ?? []).filter((a) => a.group_code === group.code);
     return { group, progress: groupProgress(items) };
   });
