@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/conectar", label: "Conectar", accent: "conectar" },
   { href: "/exponer", label: "Exponer", accent: "exponer" },
   { href: "/log", label: "Log", accent: null },
+  { href: "/plan", label: "Plan", accent: null },
 ] as const;
 
 // C.6: un acento de color por dimensión, consistente en toda la app.
