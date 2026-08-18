@@ -18,6 +18,20 @@ export type LearnTrack = "rol" | "mercado" | "tool";
 export type LearnMode = "bloque" | "chamba" | "tiempo_muerto" | "micro";
 export type LearnBlock = "A" | "B" | "C";
 export type ItemStatus = "pending" | "in_progress" | "done";
+export type ResourceFormat =
+  | "video"
+  | "podcast"
+  | "curso"
+  | "interactivo"
+  | "web"
+  | "ppt"
+  | "app"
+  | "pdf"
+  | "docx"
+  | "md"
+  | "otro";
+export type ResourceLanguage = "es" | "en";
+export type ResourceTier = "nucleo" | "utilitario" | "archivo";
 export type ArtifactStatus = "pending" | "in_progress" | "done" | "blocked";
 export type ConnectionStatus = "pending" | "done";
 export type QuestType = "ejecutar" | "aprender" | "conectar" | "bonus";
@@ -73,6 +87,23 @@ export type LearnItem = {
   source: string | null;
   status: ItemStatus;
   target_week: number | null;
+};
+
+export type Resource = {
+  id: string;
+  created_at: string;
+  user_id: string;
+  learn_code: string;
+  title: string;
+  url: string | null;
+  format: ResourceFormat;
+  language: ResourceLanguage | null;
+  duration_min: number | null;
+  week: number | null;
+  tier: ResourceTier;
+  status: ItemStatus;
+  notes: string | null;
+  sort_order: number;
 };
 
 export type ArtifactGroup = {
@@ -238,6 +269,10 @@ export type Database = {
       learn_items: TableOf<
         LearnItem,
         "block" | "chain" | "source" | "status" | "target_week"
+      >;
+      resources: TableOf<
+        Resource,
+        "url" | "language" | "duration_min" | "week" | "status" | "notes" | "sort_order"
       >;
       artifact_groups: TableOf<ArtifactGroup, "feeds" | "target_week" | "starred">;
       artifacts: TableOf<Artifact, "consumes" | "status" | "note">;
