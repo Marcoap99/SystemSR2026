@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addDays, diffDays, diffWeeks, isFriday, mondayOf, quarterOf, today } from "@/lib/domain/dates";
+import {
+  addDays,
+  diffDays,
+  diffWeeks,
+  isFriday,
+  mondayOf,
+  monthsAgo,
+  quarterOf,
+  today,
+} from "@/lib/domain/dates";
 
 describe("today()", () => {
   it("usa America/Lima (UTC-5), no la zona del servidor", () => {
@@ -37,6 +46,18 @@ describe("mondayOf / diffWeeks", () => {
     expect(diffWeeks("2026-08-19", "2026-08-21")).toBe(0); // misma semana
     expect(diffWeeks("2026-08-19", "2026-08-26")).toBe(1); // semana siguiente
     expect(diffWeeks("2026-08-19", "2026-09-02")).toBe(2);
+  });
+});
+
+describe("monthsAgo", () => {
+  it("resta meses calendario, no ~30 días", () => {
+    expect(monthsAgo("2026-08-17", 6)).toBe("2026-02-17");
+    expect(monthsAgo("2026-08-17", 1)).toBe("2026-07-17");
+  });
+
+  it("cuando el día no existe en el mes destino, cae al mes siguiente (comportamiento de Date.UTC)", () => {
+    // 31 de marzo menos 1 mes -> "31 de febrero" no existe -> rueda a marzo 3.
+    expect(monthsAgo("2026-03-31", 1)).toBe("2026-03-03");
   });
 });
 

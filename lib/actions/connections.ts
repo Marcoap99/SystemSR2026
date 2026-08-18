@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logAppEvent } from "@/lib/server/events";
 
 /** 7.4: marcar una conexión como done EXIGE llenar unlocked_note. */
 export async function markConnectionDoneAction(code: string, unlockedNote: string) {
@@ -20,6 +21,8 @@ export async function markConnectionDoneAction(code: string, unlockedNote: strin
     .update({ status: "done", unlocked_note: unlockedNote })
     .eq("code", code);
   if (error) throw new Error(error.message);
+
+  await logAppEvent(supabase, "connection_done", { code });
 
   revalidatePath("/conectar");
 }

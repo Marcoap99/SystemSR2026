@@ -1,4 +1,5 @@
 import { getDashboardData } from "@/lib/data/dashboard";
+import { getHeatmapData } from "@/lib/data/heatmap";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Countdown } from "@/components/dashboard/Countdown";
 import { Quests } from "@/components/dashboard/Quests";
@@ -6,6 +7,7 @@ import { StreakCard } from "@/components/dashboard/StreakCard";
 import { GroupBars } from "@/components/dashboard/GroupBars";
 import { Seals } from "@/components/dashboard/Seals";
 import { Insignias } from "@/components/dashboard/Insignias";
+import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
 import { RecentLog } from "@/components/dashboard/RecentLog";
 import { BossFights } from "@/components/dashboard/BossFights";
 
@@ -14,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 /** 7.1 — orden vertical exacto según el PRD. */
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const [data, heatmap] = await Promise.all([getDashboardData(), getHeatmapData()]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,6 +50,9 @@ export default async function DashboardPage() {
 
       {/* V1.1 C.3: insignias por evidencia (no forman parte del PRD original) */}
       <Insignias badges={data.badges} />
+
+      {/* V1.1 C.4: heatmap de actividad, últimos 6 meses */}
+      <ActivityHeatmap days={heatmap.days} activeDays={heatmap.activeDays} />
 
       {/* 7. Log */}
       <RecentLog entries={data.recentLog} />

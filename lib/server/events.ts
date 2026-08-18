@@ -13,7 +13,13 @@ export type AppEventType =
   | "streak_marked"
   | "freeze_used"
   | "artifact_done"
-  | "result_achieved";
+  | "result_achieved"
+  // V1.1 C.4: el heatmap de actividad necesita saber cuándo se completó un
+  // recurso o se cerró una conexión, y ninguna de las dos tablas tiene su
+  // propio timestamp de "cuándo cambió a done" — así que se loguea acá,
+  // igual que ya se hacía con artifact_done.
+  | "resource_done"
+  | "connection_done";
 
 export async function logAppEvent(
   supabase: SupabaseClient<Database>,

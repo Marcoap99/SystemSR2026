@@ -50,6 +50,12 @@ export function addDays(iso: string, days: number): string {
   return toISODate(d);
 }
 
+/** `iso` menos `months` meses calendario (mismo día, o el último día válido). */
+export function monthsAgo(iso: string, months: number): string {
+  const [y, m, d] = iso.split("-").map(Number) as [number, number, number];
+  return toISODate(new Date(Date.UTC(y, m - 1 - months, d)));
+}
+
 /** true si `iso` cae en viernes (día de cierre de semana, C.2). */
 export function isFriday(iso: string): boolean {
   return parseISODate(iso).getUTCDay() === 5;
