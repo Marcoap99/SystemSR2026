@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Container } from "./Container";
+import { ThemeToggle } from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Panel" },
@@ -48,13 +49,16 @@ export function NavBar() {
             })}
           </nav>
 
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="text-sm font-medium text-text-muted hover:text-text"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="text-sm font-medium text-text-muted hover:text-text"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </Container>
     </header>

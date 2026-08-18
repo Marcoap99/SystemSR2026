@@ -1,27 +1,41 @@
 @import "tailwindcss";
 
 /* =========================================================
-   Design tokens — PRD sección 4.
-   Todo color/radio/sombra se define acá, una sola vez. Los componentes
-   consumen clases de Tailwind (bg-brand, rounded-card, shadow-card...),
-   nunca hex sueltos.
+   Design tokens — PRD sección 4 + V1.1 Bloque C.1.
+   Los VALORES de color viven en :root / :root[data-theme="light"] como
+   variables planas; @theme solo las re-expone como colores de Tailwind
+   (bg-brand, text-warn...) para que un toggle en runtime pueda pisarlas
+   sin tocar ninguna clase de componente.
+
+   Dark es el tema BASE (V1.1 C.1) — no un modo opcional. El toggle a
+   light vive en <ThemeToggle> (components/layout/ThemeToggle.tsx).
    ========================================================= */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Color */
-  --color-brand: #00cb75;
-  --color-brand-dark: #00b369;
-  --color-secondary: #7c3aed;
-  --color-bg: #fafafa;
-  --color-surface: #ffffff;
-  --color-border: #e5e7eb;
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
-  --color-warn: #f59e0b;
-  --color-locked: #9ca3af;
+  --color-brand: var(--t-brand);
+  --color-brand-dark: var(--t-brand-dark);
+  --color-brand-glow: var(--t-brand-glow);
+  --color-secondary: var(--t-secondary);
+  --color-bg: var(--t-bg);
+  --color-surface: var(--t-surface);
+  --color-surface-2: var(--t-surface-2);
+  --color-border: var(--t-border);
+  --color-text: var(--t-text);
+  --color-text-muted: var(--t-text-muted);
+  --color-warn: var(--t-warn);
+  --color-locked: var(--t-locked);
 
-  /* Badges pastel (7.1 / sección 4) */
+  /* Acentos por dimensión (C.6) */
+  --color-dim-aprender: var(--t-dim-aprender);
+  --color-dim-generar: var(--t-dim-generar);
+  --color-dim-lograr: var(--t-dim-lograr);
+  --color-dim-conectar: var(--t-dim-conectar);
+  --color-dim-exponer: var(--t-dim-exponer);
+
+  /* Badges pastel (7.1 / sección 4) — mismo par en los dos temas: son
+     chips con fondo propio, no dependen del fondo de la página. */
   --color-badge-yellow-bg: #fef3c7;
   --color-badge-yellow-text: #92400e;
   --color-badge-blue-bg: #dbeafe;
@@ -42,8 +56,54 @@
   --radius-badge: 4px;
   --radius-bar: 999px;
 
-  /* Sombra de tarjeta */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card: var(--t-shadow-card);
+}
+
+/* ---------- Dark (base) ---------- */
+:root {
+  --t-brand: #00cb75;
+  --t-brand-dark: #00b369;
+  --t-brand-glow: rgba(0, 203, 117, 0.25);
+  --t-secondary: #9b6bff;
+  --t-bg: #0b0f14;
+  --t-surface: #141a22;
+  --t-surface-2: #1b2430;
+  --t-border: #243040;
+  --t-text: #e8edf4;
+  --t-text-muted: #8a97a8;
+  --t-warn: #ffb020;
+  --t-locked: #3a4655;
+  --t-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  /* APRENDER azul · GENERAR verde · LOGRAR morado · CONECTAR ámbar · EXPONER cian */
+  --t-dim-aprender: #4da6ff;
+  --t-dim-generar: #00cb75;
+  --t-dim-lograr: #9b6bff;
+  --t-dim-conectar: #ffb020;
+  --t-dim-exponer: #22d3ee;
+}
+
+/* ---------- Light (toggle) ---------- */
+:root[data-theme="light"] {
+  --t-brand: #00cb75;
+  --t-brand-dark: #00b369;
+  --t-brand-glow: transparent;
+  --t-secondary: #7c3aed;
+  --t-bg: #fafafa;
+  --t-surface: #ffffff;
+  --t-surface-2: #f3f4f6;
+  --t-border: #e5e7eb;
+  --t-text: #111827;
+  --t-text-muted: #6b7280;
+  --t-warn: #f59e0b;
+  --t-locked: #9ca3af;
+  --t-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  --t-dim-aprender: #2563eb;
+  --t-dim-generar: #00b369;
+  --t-dim-lograr: #7c3aed;
+  --t-dim-conectar: #d97706;
+  --t-dim-exponer: #0891b2;
 }
 
 body {
