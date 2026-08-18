@@ -12,15 +12,20 @@ export function ProgressBar({ ratio, showCheck = true }: { ratio: number; showCh
     <div className="flex items-center gap-2">
       <div className="h-2 flex-1 overflow-hidden rounded-bar bg-border">
         <div
-          className="h-full rounded-bar bg-brand transition-[width]"
+          className="h-full rounded-bar bg-brand transition-[width] duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
           style={{ width: `${clamped * 100}%` }}
         />
       </div>
       {complete && showCheck ? (
         <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-brand">
           <path
-            fill="currentColor"
-            d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.8 3.8 6.8-6.8a1 1 0 0 1 1.4 0Z"
+            className="animate-draw-check"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.3 9.7l3.8 3.8 6.8-6.8"
           />
         </svg>
       ) : null}

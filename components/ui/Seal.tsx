@@ -2,15 +2,27 @@
  * Sello (6.4): binario, no gradual. Apagado = gris; logrado = morado
  * (`secondary`). El criterio se ve al hacer hover (title nativo).
  */
-export function Seal({ code, achieved, criterion }: { code: string; achieved: boolean; criterion: string }) {
+export function Seal({
+  code,
+  achieved,
+  criterion,
+  className = "",
+}: {
+  code: string;
+  achieved: boolean;
+  criterion: string;
+  className?: string;
+}) {
   return (
     <div
       title={criterion}
       className={
-        "flex h-12 w-12 shrink-0 cursor-default items-center justify-center rounded-full border font-mono text-xs font-semibold " +
+        "flex h-12 w-12 shrink-0 cursor-default items-center justify-center rounded-full border font-mono text-xs font-semibold transition-transform " +
         (achieved
           ? "border-secondary bg-secondary text-white"
-          : "border-border bg-surface text-text-muted")
+          : "border-border bg-surface text-text-muted") +
+        " " +
+        className
       }
     >
       {code}

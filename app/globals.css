@@ -114,3 +114,142 @@ body {
 /* Números y contadores (racha, contador regresivo): usar la clase
    utilitaria `tabular-nums` de Tailwind — no "bailan" de ancho al
    cambiar de dígito. */
+
+/* =========================================================
+   V1.1 C.5 — Animaciones. Todas cortas, todas respetan
+   prefers-reduced-motion (bloque final acá abajo apaga todo de un
+   saque, así ninguna clase individual se puede olvidar de la variante
+   motion-reduce). Nada de sonido.
+   ========================================================= */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-page-enter {
+  animation: page-enter 200ms ease-out;
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-badge-pop {
+  animation: badge-pop 500ms ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 500ms ease-out;
+}
+
+@keyframes fire-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-fire-pulse {
+  animation: fire-pulse 300ms ease-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+.hover\:animate-shake:hover {
+  animation: shake 300ms ease-in-out;
+}
+
+/* Largo real del trazo "M3.3 9.7l3.8 3.8 6.8-6.8" (~15) usado por el
+   check de ProgressBar y por el de ArtifactRow al cerrar un artefacto. */
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 16;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animate-draw-check {
+  stroke-dasharray: 16;
+  animation: draw-check 350ms ease-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(48px) rotate(200deg);
+    opacity: 0;
+  }
+}
+.animate-confetti {
+  animation: confetti-fall 1.2s ease-in forwards;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.animate-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-surface-2) 0%,
+    var(--color-border) 50%,
+    var(--color-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter,
+  .animate-badge-pop,
+  .animate-fade-in,
+  .animate-fire-pulse,
+  .hover\:animate-shake:hover,
+  .animate-draw-check,
+  .animate-confetti,
+  .animate-shimmer {
+    animation: none !important;
+  }
+}

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { CountUp } from "@/components/ui/CountUp";
+import { GroupCompleteConfetti } from "@/components/dashboard/GroupCompleteConfetti";
 import type { GroupProgress } from "@/lib/domain/progress";
 import type { ArtifactGroup } from "@/lib/types";
 
@@ -18,8 +20,9 @@ export function GroupBars({
           <Link
             key={group.code}
             href={`/g/${group.code}`}
-            className="flex flex-col gap-2 py-3 transition-colors hover:bg-bg sm:flex-row sm:items-center sm:gap-4"
+            className="relative flex flex-col gap-2 py-3 transition-colors hover:bg-bg sm:flex-row sm:items-center sm:gap-4"
           >
+            <GroupCompleteConfetti groupCode={group.code} complete={progress.ratio >= 1} />
             <span className="w-14 shrink-0 font-mono text-sm font-semibold text-text-muted">
               {group.code}
             </span>
@@ -35,7 +38,7 @@ export function GroupBars({
               <ProgressBar ratio={progress.ratio} />
             </div>
             <span className="w-16 shrink-0 font-mono text-sm text-text-muted tabular-nums sm:text-right">
-              {progress.done}/{progress.total}
+              <CountUp value={progress.done} />/{progress.total}
             </span>
           </Link>
         ))}

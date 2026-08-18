@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NavBar } from "@/components/layout/NavBar";
 import { Container } from "@/components/layout/Container";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 /**
  * Guard de sesión en el servidor (defensa en profundidad, además del
@@ -25,7 +26,9 @@ export default async function AppLayout({
     <div className="min-h-screen bg-bg">
       <NavBar />
       <main className="py-6">
-        <Container>{children}</Container>
+        <Container>
+          <PageTransition>{children}</PageTransition>
+        </Container>
       </main>
     </div>
   );

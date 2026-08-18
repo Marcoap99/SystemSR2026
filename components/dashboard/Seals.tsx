@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { Card } from "@/components/ui/Card";
 import { Seal } from "@/components/ui/Seal";
+import { EarnedPulse } from "@/components/ui/EarnedPulse";
 import { achieveResultAction } from "@/lib/actions/results";
 import { today } from "@/lib/domain/dates";
 import type { Result } from "@/lib/types";
@@ -47,15 +48,23 @@ export function Seals({ results }: { results: Result[] }) {
       <h2 className="text-lg font-semibold text-text">Sellos</h2>
       <div className="mt-4 flex flex-wrap gap-3">
         {results.map((result) => (
-          <button
-            key={result.code}
-            type="button"
-            onClick={() => openFor(result)}
-            className={result.achieved ? "cursor-default" : "cursor-pointer"}
-            aria-label={`${result.code}: ${result.title}`}
-          >
-            <Seal code={result.code} achieved={result.achieved} criterion={result.criterion} />
-          </button>
+          <EarnedPulse key={result.code} id={`seal:${result.code}`} earned={result.achieved}>
+            {(justEarned) => (
+              <button
+                type="button"
+                onClick={() => openFor(result)}
+                className={result.achieved ? "cursor-default" : "cursor-pointer"}
+                aria-label={`${result.code}: ${result.title}`}
+              >
+                <Seal
+                  code={result.code}
+                  achieved={result.achieved}
+                  criterion={result.criterion}
+                  className={justEarned ? "animate-badge-pop shadow-[0_0_16px_var(--color-brand-glow)]" : ""}
+                />
+              </button>
+            )}
+          </EarnedPulse>
         ))}
       </div>
 
