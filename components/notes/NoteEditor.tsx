@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { es as esDictionary } from "@blocknote/core/locales";
 import { filterSuggestionItems } from "@blocknote/core/extensions";
 import type { Block, PartialBlock } from "@blocknote/core";
@@ -89,6 +89,13 @@ export function NoteEditor({
       }
     },
   });
+
+  // AC3: al abrir el modal, el foco entra al editor. El editor se crea
+  // fresco por cada apertura (NotesModal no persiste entre resource.id
+  // distintos), así que este efecto corre una vez por apertura real.
+  useEffect(() => {
+    editor.focus();
+  }, [editor]);
 
   const slashMenuItems = useMemo<DefaultReactSuggestionItem[]>(() => {
     return (getDefaultReactSlashMenuItems(editor) as SlashItemWithKey[])

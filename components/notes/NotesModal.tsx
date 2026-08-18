@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import type { Block, PartialBlock } from "@blocknote/core";
 import { saveResourceNotesAction, uploadNoteImageAction } from "@/lib/actions/notes";
 import { updateResourceStatusAction } from "@/lib/actions/resources";
@@ -137,12 +138,20 @@ export function NotesModal({
     setTimeout(onClose, 140);
   }, [flushSave, onClose]);
 
-  function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      void requestClose();
-      return;
+  // AC2 -- Esc en el documento, no en el div del modal: BlockNote monta
+  // su slash menu y sus tooltips en un portal fuera del subárbol del
+  // modal, así que si el foco termina ahí (uso normal del editor), un
+  // listener en modalRef nunca recibiría el evento -- el bubbling de
+  // React sigue el árbol de React/DOM, no lo que se ve en pantalla.
+  useEffect(() => {
+    function onDocKeyDown(e: globalThis.KeyboardEvent) {
+      if (e.key === "Escape") void requestClose();
     }
+    document.addEventListener("keydown", onDocKeyDown);
+    return () => document.removeEventListener("keydown", onDocKeyDown);
+  }, [requestClose]);
+
+  function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key !== "Tab") return;
     const root = modalRef.current;
     if (!root) return;
@@ -170,7 +179,13 @@ export function NotesModal({
     updateResourceStatusAction(resource.id, next).finally(() => setStatusPending(false));
   }
 
-  return (
+  // Portal a document.body: PageTransition anima el contenido de la página
+  // con un transform, y un transform en cualquier ancestro convierte a
+  // `position: fixed` en "fixed relativo a ese ancestro" en vez de al
+  // viewport real (spec de CSS) -- sin el portal el backdrop terminaba
+  // tan alto como el contenido scrolleable de la página, no como la
+  // pantalla. Ver AC14.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-0 backdrop-blur-sm transition-opacity duration-150 motion-reduce:transition-none sm:p-4"
       onClick={() => void requestClose()}
@@ -230,7 +245,12 @@ export function NotesModal({
           <p className="border-b border-border bg-warn/10 px-4 py-1.5 text-xs text-warn">{uploadNotice}</p>
         ) : null}
 
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* min-h-0: sin esto un flex item con overflow-y-auto igual crece
+            a la altura de su contenido (el min-height:auto por defecto de
+            flexbox le gana al flex-1) y el modal entero termina tan alto
+            como la nota en vez de scrollear adentro -- se nota recién en
+            móvil, donde no hay un sm:max-h-[80vh] que lo tape. */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <NoteEditor
             initialContent={initialBlocksFor(resource)}
             editable={!locked}
@@ -269,6 +289,7 @@ export function NotesModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
