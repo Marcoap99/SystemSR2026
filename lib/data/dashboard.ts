@@ -1,8 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { today } from "@/lib/domain/dates";
+import { addDays, isFriday, today } from "@/lib/domain/dates";
 import { currentWeek, isFiestas } from "@/lib/domain/weeks";
 import { groupProgress, phaseProgress } from "@/lib/domain/progress";
 import { daysUntil, nextPendingBoss, shouldShowCountdown } from "@/lib/domain/countdown";
+import { contextualGreeting, type ClosedArtifactInfo } from "@/lib/domain/greeting";
+import { evaluateBadges, type BadgeState } from "@/lib/domain/badges";
+import { getDisplayState } from "@/lib/domain/streaks";
 import type {
   Artifact,
   ArtifactGroup,
@@ -30,6 +33,8 @@ export interface DashboardData {
   groups: Array<{ group: ArtifactGroup; progress: ReturnType<typeof groupProgress> }>;
   results: Result[];
   recentLog: LogEntry[];
+  greeting: string;
+  badges: BadgeState[];
 }
 
 /** Carga y deriva todo lo que necesita el dashboard (7.1) en un solo lugar. */
@@ -46,6 +51,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     { data: artifacts },
     { data: results },
     { data: recentLog },
+    { data: artifactDoneEvents },
+    { data: ex4Events },
   ] = await Promise.all([
     supabase.from("phases").select("*").order("number"),
     supabase.from("weeks").select("*").order("number"),
@@ -55,13 +62,33 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabase.from("artifacts").select("*"),
     supabase.from("results").select("*").order("code"),
     supabase.from("log_entries").select("*").order("date", { ascending: false }).limit(5),
+    // C.2: la última condición de saludo revisa si se cerró un artefacto
+    // ayer; C.3 no guarda "insignia ganada", se deriva cada vez de la
+    // evidencia real (acá, el evento de app_events que ya se loguea al
+    // cerrar un artefacto).
+    supabase
+      .from("app_events")
+      .select("payload, created_at")
+      .eq("event_type", "artifact_done")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("exposure_events")
+      .select("date")
+      .eq("exposure_code", "EX4")
+      .eq("counts", true)
+      .order("date", { ascending: false })
+      .limit(1),
   ]);
 
   const weekRow = currentWeek((weeks ?? []) as Week[], todayISO);
 
-  const { data: questRows } = weekRow
-    ? await supabase.from("quests").select("*").eq("week_number", weekRow.number).order("type")
-    : { data: [] as Quest[] };
+  const [{ data: questRows }, { data: weekLogRows }] = weekRow
+    ? await Promise.all([
+        supabase.from("quests").select("*").eq("week_number", weekRow.number).order("type"),
+        supabase.from("log_entries").select("id").eq("week_number", weekRow.number).limit(1),
+      ])
+    : [{ data: [] as Quest[] }, { data: [] as { id: string }[] }];
 
   const activePhase =
     (phases ?? [])
@@ -84,6 +111,71 @@ export async function getDashboardData(): Promise<DashboardData> {
     return { group, progress: groupProgress(items) };
   });
 
+  // C.2: el artefacto cerrado "ayer" en hora de Lima, si hay uno.
+  const yesterdayISO = addDays(todayISO, -1);
+  const artifactClosedYesterday: ClosedArtifactInfo | null = (() => {
+    const event = (artifactDoneEvents ?? []).find(
+      (e) => today(new Date(e.created_at)) === yesterdayISO,
+    );
+    const code = event ? (event.payload as { code?: string })?.code : undefined;
+    if (!code) return null;
+    const artifact = (artifacts ?? []).find((a) => a.code === code);
+    if (!artifact) return null;
+    const groupEntry = groupsWithProgress.find((g) => g.group.code === artifact.group_code);
+    if (!groupEntry) return null;
+    return {
+      code,
+      groupTitle: groupEntry.group.title,
+      groupDone: groupEntry.progress.done,
+      groupTotal: groupEntry.progress.total,
+    };
+  })();
+
+  const dailyStreakRow = streaks.daily_english;
+  const dailyDisplay = dailyStreakRow
+    ? getDisplayState(
+        {
+          current: dailyStreakRow.current,
+          longest: dailyStreakRow.longest,
+          lastMarked: dailyStreakRow.last_marked,
+          freezesTotal: dailyStreakRow.freezes_total,
+          freezesUsed: dailyStreakRow.freezes_used,
+          quarter: dailyStreakRow.quarter,
+        },
+        "daily_english",
+        todayISO,
+      )
+    : null;
+
+  const greeting = contextualGreeting({
+    weekNumber: weekRow?.number ?? null,
+    phaseRatio,
+    dailyStreak: dailyDisplay,
+    upcomingBoss: showCountdown && nextBoss && daysUntilBoss !== null
+      ? { number: nextBoss.number, daysUntil: daysUntilBoss }
+      : null,
+    artifactClosedYesterday,
+    isFridayWithoutLog: isFriday(todayISO) && (weekLogRows ?? []).length === 0,
+  });
+
+  const resultAchieved: Record<string, boolean> = {};
+  const resultAchievedAt: Record<string, string | null> = {};
+  for (const r of results ?? []) {
+    resultAchieved[r.code] = r.achieved;
+    resultAchievedAt[r.code] = r.achieved_at;
+  }
+  const boss1 = (bosses ?? []).find((b) => b.number === 1) ?? null;
+  const badges = evaluateBadges({
+    resultAchieved,
+    resultAchievedAt,
+    dailyStreakLongest: streaks.daily_english?.longest ?? 0,
+    weeklyLogStreakLongest: streaks.weekly_log?.longest ?? 0,
+    ex4Counted: (ex4Events ?? []).length > 0,
+    ex4CountedAt: ex4Events?.[0]?.date ?? null,
+    boss1Won: boss1?.status === "won",
+    boss1Date: boss1?.date ?? null,
+  });
+
   return {
     todayISO,
     weekRow,
@@ -99,5 +191,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     groups: groupsWithProgress,
     results: (results ?? []) as Result[],
     recentLog: (recentLog ?? []) as LogEntry[],
+    greeting,
+    badges,
   };
 }

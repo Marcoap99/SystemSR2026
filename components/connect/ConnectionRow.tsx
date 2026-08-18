@@ -39,11 +39,11 @@ export function ConnectionRow({ connection }: { connection: Connection }) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-text">
-            {connection.code} — {connection.person}
+            <span className="font-mono">{connection.code}</span> — {connection.person}
           </p>
           {connection.role ? <p className="text-xs text-text-muted">{connection.role}</p> : null}
           <p className="mt-1 text-sm text-text-muted">{connection.unlocks}</p>
-          <p className="mt-1 text-xs text-text-muted">{connection.target_month}</p>
+          <p className="mt-1 font-mono text-xs text-text-muted">{connection.target_month}</p>
         </div>
 
         <span
@@ -82,7 +82,7 @@ export function ConnectionRow({ connection }: { connection: Connection }) {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-text">
-              {connection.code} — {connection.person}
+              <span className="font-mono">{connection.code}</span> — {connection.person}
             </h3>
             <p className="mt-1 text-sm text-text-muted">
               ¿Qué desbloqueó realmente esta conexión?

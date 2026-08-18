@@ -50,6 +50,11 @@ export function addDays(iso: string, days: number): string {
   return toISODate(d);
 }
 
+/** true si `iso` cae en viernes (día de cierre de semana, C.2). */
+export function isFriday(iso: string): boolean {
+  return parseISODate(iso).getUTCDay() === 5;
+}
+
 /** Lunes de la semana ISO que contiene `iso`. */
 export function mondayOf(iso: string): string {
   const d = parseISODate(iso);

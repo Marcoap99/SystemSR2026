@@ -27,7 +27,7 @@ export function BossFights({ bosses }: { bosses: Boss[] }) {
         {bosses.map((boss) => (
           <div key={boss.number} className="rounded-card border border-border p-4">
             <p className="text-sm font-semibold text-text">{boss.name}</p>
-            <p className="mt-1 text-xs text-text-muted">{formatDate(boss.date)}</p>
+            <p className="mt-1 font-mono text-xs text-text-muted">{formatDate(boss.date)}</p>
             <p className="mt-2 text-sm text-text-muted">{boss.criterion}</p>
             <span
               className={

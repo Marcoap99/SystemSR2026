@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, diffDays, diffWeeks, mondayOf, quarterOf, today } from "@/lib/domain/dates";
+import { addDays, diffDays, diffWeeks, isFriday, mondayOf, quarterOf, today } from "@/lib/domain/dates";
 
 describe("today()", () => {
   it("usa America/Lima (UTC-5), no la zona del servidor", () => {
@@ -37,6 +37,14 @@ describe("mondayOf / diffWeeks", () => {
     expect(diffWeeks("2026-08-19", "2026-08-21")).toBe(0); // misma semana
     expect(diffWeeks("2026-08-19", "2026-08-26")).toBe(1); // semana siguiente
     expect(diffWeeks("2026-08-19", "2026-09-02")).toBe(2);
+  });
+});
+
+describe("isFriday", () => {
+  it("identifica el viernes de la semana (C.2)", () => {
+    expect(isFriday("2026-08-17")).toBe(false); // lunes
+    expect(isFriday("2026-08-21")).toBe(true); // viernes
+    expect(isFriday("2026-08-22")).toBe(false); // sábado
   });
 });
 

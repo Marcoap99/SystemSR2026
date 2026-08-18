@@ -43,10 +43,10 @@ export function ExposureTypeCard({ item }: { item: ExposureWithCount }) {
   return (
     <div className="rounded-card border border-border p-4">
       <p className="text-sm font-semibold text-text">
-        {exposure.code} — {exposure.type}
+        <span className="font-mono">{exposure.code}</span> — {exposure.type}
       </p>
       <p className="mt-1 text-xs text-text-muted">Salida obligatoria: {exposure.required_output}</p>
-      <p className="mt-3 text-sm font-medium text-text tabular-nums">{item.summaryText}</p>
+      <p className="mt-3 font-mono text-sm font-medium text-text tabular-nums">{item.summaryText}</p>
 
       {item.capReached ? (
         <p className="mt-3 text-xs font-medium text-warn">Techo del mes alcanzado</p>

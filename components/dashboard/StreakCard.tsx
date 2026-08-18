@@ -42,7 +42,16 @@ export function StreakCard({ kind, streak }: { kind: StreakKind; streak: Streak 
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-text-muted">{LABELS[kind]}</p>
-          <p className="mt-1 text-3xl font-bold text-text tabular-nums">{display.current}</p>
+          <div className="mt-1 flex items-center gap-1.5">
+            {/* C.6: fuego en vez de un número pelado, opacidad ~ largo de la racha. */}
+            <span
+              aria-hidden="true"
+              style={{ opacity: display.current === 0 ? 0.25 : Math.min(1, 0.35 + display.current / 30) }}
+            >
+              🔥
+            </span>
+            <p className="font-mono text-3xl font-bold text-text tabular-nums">{display.current}</p>
+          </div>
         </div>
         <span
           className={

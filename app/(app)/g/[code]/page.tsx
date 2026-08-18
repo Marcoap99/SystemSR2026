@@ -28,7 +28,7 @@ export default async function GroupDetailPage({
 
         <div className="mt-2 flex items-center gap-2">
           <h1 className="text-xl font-semibold text-text">
-            {data.group.code} — {data.group.title}
+            <span className="font-mono">{data.group.code}</span> — {data.group.title}
           </h1>
           {data.group.starred ? (
             <span className="text-secondary" title="El más valioso" aria-label="Prioritario">
@@ -40,7 +40,7 @@ export default async function GroupDetailPage({
         <div className="mt-4">
           <ProgressBar ratio={data.progress.ratio} />
         </div>
-        <p className="mt-2 text-sm text-text-muted tabular-nums">
+        <p className="mt-2 font-mono text-sm text-text-muted tabular-nums">
           {data.progress.done}/{data.progress.total} artefactos
         </p>
 

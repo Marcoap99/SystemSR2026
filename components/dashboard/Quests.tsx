@@ -45,7 +45,9 @@ export function Quests({ quests, isFiestas }: { quests: Quest[]; isFiestas: bool
                 <span className={"block text-sm " + (q.done ? "text-text-muted line-through" : "text-text")}>
                   {q.title}
                 </span>
-                {q.ref_code ? <span className="mt-0.5 block text-xs text-text-muted">{q.ref_code}</span> : null}
+                {q.ref_code ? (
+                  <span className="mt-0.5 block font-mono text-xs text-text-muted">{q.ref_code}</span>
+                ) : null}
               </span>
             </label>
           ))}

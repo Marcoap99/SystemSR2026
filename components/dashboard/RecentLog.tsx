@@ -13,11 +13,11 @@ export function RecentLog({ entries }: { entries: LogEntry[] }) {
 
       <ul className="mt-4 flex flex-col gap-3">
         {entries.length === 0 ? (
-          <p className="text-sm text-text-muted">Todavía no hay entradas.</p>
+          <p className="text-sm text-text-muted">Sin entradas todavía. La primera es la que cuesta.</p>
         ) : (
           entries.map((entry) => (
             <li key={entry.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
-              <div className="flex items-center justify-between gap-2 text-xs text-text-muted">
+              <div className="flex items-center justify-between gap-2 font-mono text-xs text-text-muted">
                 <span>{entry.date}</span>
                 {entry.ref_code ? (
                   <span className="rounded-badge bg-bg px-1.5 py-0.5">{entry.ref_code}</span>

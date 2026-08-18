@@ -5,6 +5,7 @@ import { Quests } from "@/components/dashboard/Quests";
 import { StreakCard } from "@/components/dashboard/StreakCard";
 import { GroupBars } from "@/components/dashboard/GroupBars";
 import { Seals } from "@/components/dashboard/Seals";
+import { Insignias } from "@/components/dashboard/Insignias";
 import { RecentLog } from "@/components/dashboard/RecentLog";
 import { BossFights } from "@/components/dashboard/BossFights";
 
@@ -17,8 +18,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 1. Header: semana actual + barra de fase + fase activa */}
-      <DashboardHeader week={data.weekRow} phase={data.activePhase} phaseRatio={data.phaseRatio} />
+      {/* 1. Header: saludo contextual + semana/fase + barra de fase segmentada */}
+      <DashboardHeader
+        week={data.weekRow}
+        phase={data.activePhase}
+        phaseRatio={data.phaseRatio}
+        greeting={data.greeting}
+      />
 
       {/* 2. Contador regresivo — solo si aplica (6.7) */}
       {data.showCountdown && data.nextBoss && data.daysUntilBoss !== null ? (
@@ -39,6 +45,9 @@ export default async function DashboardPage() {
 
       {/* 6. Sellos (L) */}
       <Seals results={data.results} />
+
+      {/* V1.1 C.3: insignias por evidencia (no forman parte del PRD original) */}
+      <Insignias badges={data.badges} />
 
       {/* 7. Log */}
       <RecentLog entries={data.recentLog} />

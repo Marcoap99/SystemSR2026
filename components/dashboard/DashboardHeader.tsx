@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { PhaseSegments } from "@/components/dashboard/PhaseSegments";
 import type { Phase, Week } from "@/lib/types";
 
 function formatShort(iso: string) {
@@ -7,40 +7,48 @@ function formatShort(iso: string) {
   return `${d}/${m}`;
 }
 
-/** 7.1 (1): semana actual + barra de fase + fase activa. */
+// App de un solo usuario, sin tabla de perfil — el nombre es un literal a
+// propósito (C.2), igual que el resto de las etiquetas fijas de la app.
+const USER_NAME = "Marcoantonio";
+const TOTAL_WEEKS = 18;
+
+/**
+ * 7.1 (1) + V1.1 C.2/C.6: saludo contextual, semana/fase en una línea, la
+ * frase de estado (ya resuelta por contextualGreeting) y la barra de fase
+ * segmentada en 18 bloques en vez de continua.
+ */
 export function DashboardHeader({
   week,
   phase,
   phaseRatio,
+  greeting,
 }: {
   week: Week | null;
   phase: Phase | null;
   phaseRatio: number;
+  greeting: string;
 }) {
   return (
     <Card>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-text-muted">
-            {week
-              ? `Semana ${week.number} · ${formatShort(week.start_date)} – ${formatShort(week.end_date)}`
-              : "Semana no configurada"}
-          </p>
-          {week?.focus ? <p className="mt-1 text-xl font-semibold text-text">{week.focus}</p> : null}
-        </div>
+      <p className="text-xl font-semibold text-text">Hola, {USER_NAME}.</p>
 
-        {phase ? (
-          <div className="text-right">
-            <p className="text-sm font-medium text-text-muted">Fase activa</p>
-            <p className="text-base font-semibold text-text">{phase.name}</p>
-          </div>
-        ) : null}
-      </div>
+      <p className="mt-1 font-mono text-sm text-text-muted">
+        {week ? `Semana ${week.number} de ${TOTAL_WEEKS}` : "Semana no configurada"}
+        {phase ? ` · Fase ${phase.number}: ${phase.name}` : ""}
+      </p>
 
-      {phase?.rule ? <p className="mt-2 text-sm text-text-muted">{phase.rule}</p> : null}
+      <p className="mt-2 text-sm text-text">{greeting}</p>
+
+      {week ? (
+        <p className="mt-3 font-mono text-xs text-text-muted">
+          {formatShort(week.start_date)} – {formatShort(week.end_date)}
+          {week.focus ? ` · ${week.focus}` : ""}
+        </p>
+      ) : null}
+      {phase?.rule ? <p className="mt-1 text-sm text-text-muted">{phase.rule}</p> : null}
 
       <div className="mt-4">
-        <ProgressBar ratio={phaseRatio} showCheck={false} />
+        <PhaseSegments ratio={phaseRatio} />
       </div>
     </Card>
   );
