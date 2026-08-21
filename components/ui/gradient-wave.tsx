@@ -627,8 +627,17 @@ void main() {
     this.mesh = new this.minigl.Mesh(geometry, material);
 
     this.resize();
-    window.addEventListener("resize", () => this.resize());
+    window.addEventListener("resize", this.boundResize);
   }
+
+  // Referencia estable: hace falta para poder sacar exactamente este
+  // listener en dispose(). El original hacía
+  // `window.addEventListener("resize", () => this.resize())` con un
+  // arrow inline -- nunca se podía remover (una función nueva en cada
+  // llamada no es "la misma" para removeEventListener), así que el
+  // contexto WebGL entero quedaba retenido para siempre por ese
+  // listener colgado de `window`, aunque el componente se desmontara.
+  boundResize = () => this.resize();
 
   resize(): void {
     const width = window.innerWidth;
@@ -664,6 +673,21 @@ void main() {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
+  }
+
+  /**
+   * Se llama al desmontar (en vez de solo stop()). Saca el listener de
+   * `window` -- sin esto se acumula uno por cada montaje (cambio de
+   * tema, o el doble-montaje de Strict Mode en desarrollo) y cada uno
+   * mantiene vivo su contexto WebGL para siempre, aunque el canvas ya
+   * no esté en el DOM. Varios de esos activos a la vez es exactamente
+   * el tipo de cosa que causa lag/traba en toda la app, no solo acá.
+   */
+  dispose(): void {
+    this.stop();
+    window.removeEventListener("resize", this.boundResize);
+    const ext = this.minigl.gl.getExtension("WEBGL_lose_context");
+    ext?.loseContext();
   }
 }
 
@@ -739,7 +763,7 @@ export function GradientWave({
     }
 
     return () => {
-      gradientRef.current?.stop();
+      gradientRef.current?.dispose();
       if (container.contains(canvas)) {
         container.removeChild(canvas);
       }
