@@ -12,8 +12,14 @@ export interface NotesByTopicGroup {
   learnCode: string;
   learnTitle: string;
   priority: number;
+  // V1.4: true para el bucket "Sin plan" (recursos libres, sin learn_item).
+  isFree: boolean;
   resources: Resource[];
 }
+
+// Clave interna para agrupar los recursos libres (learn_code null) en
+// "Por tema" -- nunca se persiste, solo vive en esta función.
+const FREE_BUCKET_KEY = "SIN_PLAN";
 
 export interface NotesData {
   byWeek: NotesByWeekGroup[];
@@ -61,17 +67,22 @@ export async function getNotesData(): Promise<NotesData> {
 
   const topicMap = new Map<string, Resource[]>();
   for (const r of (resources ?? []) as Resource[]) {
-    const list = topicMap.get(r.learn_code) ?? [];
+    const key = r.learn_code ?? FREE_BUCKET_KEY;
+    const list = topicMap.get(key) ?? [];
     list.push(r);
-    topicMap.set(r.learn_code, list);
+    topicMap.set(key, list);
   }
   const byTopic: NotesByTopicGroup[] = Array.from(topicMap.entries())
     .map(([code, list]) => {
+      if (code === FREE_BUCKET_KEY) {
+        return { learnCode: code, learnTitle: "Sin plan", priority: Infinity, isFree: true, resources: list };
+      }
       const item = itemByCode.get(code);
       return {
         learnCode: code,
         learnTitle: item?.title ?? code,
         priority: item?.priority ?? 999,
+        isFree: false,
         resources: list,
       };
     })

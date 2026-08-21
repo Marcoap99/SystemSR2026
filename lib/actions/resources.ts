@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { logAppEvent } from "@/lib/server/events";
-import type { ItemStatus } from "@/lib/types";
+import type { ItemStatus, ResourceFormat } from "@/lib/types";
 
 /** Bloque A: estado editable de un recurso concreto (no del learn_item). */
 export async function updateResourceStatusAction(id: string, status: ItemStatus) {
@@ -26,6 +26,37 @@ export async function updateResourceStatusAction(id: string, status: ItemStatus)
   }
 
   revalidatePath("/aprender");
+  revalidatePath("/enlaces");
+}
+
+/**
+ * V1.4 — alta de un enlace libre (parche sección 2): learn_code/tier
+ * quedan null a propósito, son conceptos del plan que acá no aplican.
+ * Arranca en 'pending' -- aparece en /enlaces hasta que se le cree una
+ * nota (o se marque "Hecho" a mano desde el modal).
+ */
+export async function createFreeResourceAction(
+  title: string,
+  url: string | null,
+  format: ResourceFormat,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autenticado");
+
+  const { error } = await supabase.from("resources").insert({
+    learn_code: null,
+    tier: null,
+    title: title.trim(),
+    url: url?.trim() || null,
+    format,
+    status: "pending",
+  });
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/enlaces");
 }
 
 // La nota personal por recurso (antes un textarea acá mismo) vive desde

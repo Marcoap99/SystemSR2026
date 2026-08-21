@@ -48,7 +48,9 @@ export async function getLearnItemsData(): Promise<LearnItemsData> {
 
   const [{ data: items }, { data: resources }, { data: weeks }] = await Promise.all([
     supabase.from("learn_items").select("*"),
-    supabase.from("resources").select("*").order("sort_order"),
+    // V1.4: los recursos libres (learn_code null, biblioteca de /enlaces)
+    // no pertenecen a ningún track -- /aprender es solo el plan.
+    supabase.from("resources").select("*").not("learn_code", "is", null).order("sort_order"),
     supabase.from("weeks").select("*").order("number"),
   ]);
 
@@ -60,6 +62,9 @@ export async function getLearnItemsData(): Promise<LearnItemsData> {
 
   const resourcesByCode = new Map<string, Resource[]>();
   for (const resource of resources ?? []) {
+    // La query ya excluye learn_code null (V1.4) -- este guard es solo
+    // para que TypeScript angoste el tipo, no se espera que dispare.
+    if (resource.learn_code === null) continue;
     const list = resourcesByCode.get(resource.learn_code) ?? [];
     list.push(resource);
     resourcesByCode.set(resource.learn_code, list);

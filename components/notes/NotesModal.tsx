@@ -206,9 +206,16 @@ export function NotesModal({
         <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border p-4">
           <div className="min-w-0">
             <p className="font-mono text-xs text-text-muted">
-              {resource.learn_code} · {TIER_LABEL[resource.tier]} · {FORMAT_LABEL[resource.format]}
-              {resource.language ? ` · ${LANGUAGE_LABEL[resource.language]}` : ""}
-              {resource.week ? ` · sem ${resource.week}` : ""}
+              {/* V1.4: un enlace libre no tiene learn_code ni tier -- se omiten en vez de imprimir "undefined". */}
+              {[
+                resource.learn_code,
+                resource.tier ? TIER_LABEL[resource.tier] : null,
+                FORMAT_LABEL[resource.format],
+                resource.language ? LANGUAGE_LABEL[resource.language] : null,
+                resource.week ? `sem ${resource.week}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
             <h2 id="notes-modal-title" className="mt-1 text-lg font-semibold text-text">
               {resource.title}

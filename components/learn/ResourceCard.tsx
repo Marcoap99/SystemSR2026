@@ -94,7 +94,10 @@ export function ResourceCard({ resource, locked = false }: { resource: Resource;
               {resource.week ? (
                 <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">Semana {resource.week}</span>
               ) : null}
-              <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{TIER_LABEL[resource.tier]}</span>
+              {/* V1.4: tier es null solo para recursos libres, que /aprender ya no trae -- este guard es solo tipado. */}
+              {resource.tier ? (
+                <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{TIER_LABEL[resource.tier]}</span>
+              ) : null}
             </div>
           </div>
 

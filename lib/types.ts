@@ -114,14 +114,19 @@ export type Resource = {
   id: string;
   created_at: string;
   user_id: string;
-  learn_code: string;
+  // V1.4 — null significa "libre": no pertenece a ningún learn_item del
+  // plan (biblioteca de enlaces, sección 2 del parche). Es la única
+  // señal de origen; no hay una columna aparte para eso.
+  learn_code: string | null;
   title: string;
   url: string | null;
   format: ResourceFormat;
   language: ResourceLanguage | null;
   duration_min: number | null;
   week: number | null;
-  tier: ResourceTier;
+  // V1.4 — null para los recursos libres (núcleo/utilitario/archivo es
+  // un concepto del plan, no aplica a un link suelto).
+  tier: ResourceTier | null;
   status: ItemStatus;
   // V1.3 — reemplaza el textarea plano por un documento BlockNote.
   // notes_legacy conserva el texto original (nunca se borra, sección 1
@@ -308,10 +313,12 @@ export type Database = {
       >;
       resources: TableOf<
         Resource,
+        | "learn_code"
         | "url"
         | "language"
         | "duration_min"
         | "week"
+        | "tier"
         | "status"
         | "notes"
         | "notes_legacy"
