@@ -7,7 +7,7 @@ import { StreakCard } from "@/components/dashboard/StreakCard";
 import { GroupBars } from "@/components/dashboard/GroupBars";
 import { Seals } from "@/components/dashboard/Seals";
 import { Insignias } from "@/components/dashboard/Insignias";
-import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
+import { ActivitySection } from "@/components/dashboard/ActivitySection";
 import { RecentLog } from "@/components/dashboard/RecentLog";
 import { BossFights } from "@/components/dashboard/BossFights";
 
@@ -51,8 +51,8 @@ export default async function DashboardPage() {
       {/* V1.1 C.3: insignias por evidencia (no forman parte del PRD original) */}
       <Insignias badges={data.badges} />
 
-      {/* V1.1 C.4: heatmap de actividad, últimos 6 meses */}
-      <ActivityHeatmap days={heatmap.days} activeDays={heatmap.activeDays} />
+      {/* V1.1 C.4 + V1.5: calendario de actividad (6 meses) y vista "Reciente" (barras 7/14/30). */}
+      <ActivitySection days={heatmap.days} activeDays={heatmap.activeDays} />
 
       {/* 7. Log */}
       <RecentLog entries={data.recentLog} />

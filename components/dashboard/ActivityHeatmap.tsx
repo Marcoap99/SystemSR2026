@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/Card";
 import { addDays, formatDMY, mondayOf } from "@/lib/domain/dates";
 import type { HeatmapDay, IntensityLevel } from "@/lib/domain/heatmap";
 
@@ -38,16 +37,17 @@ function cellTitle(day: HeatmapDay): string {
 
 /**
  * V1.1 C.4 — calendario de contribuciones estilo GitHub, últimos 6 meses.
- * Servidor puro: el tooltip usa el `title` nativo, no hace falta JS.
+ * Server-renderable puro: el tooltip usa el `title` nativo, no hace falta
+ * JS. Desde V1.5 vive dentro de ActivitySection (que le puso el Card y
+ * el encabezado) como una de sus dos vistas -- este componente ya no
+ * trae los suyos propios.
  */
 export function ActivityHeatmap({ days, activeDays }: { days: HeatmapDay[]; activeDays: number }) {
   const columns = buildColumns(days);
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-text">Actividad</h2>
-
-      <div className="mt-4 overflow-x-auto pb-2">
+    <div>
+      <div className="overflow-x-auto pb-2">
         <div className="flex gap-1">
           {columns.map((column, i) => (
             <div key={i} className="flex flex-col gap-1">
@@ -79,6 +79,6 @@ export function ActivityHeatmap({ days, activeDays }: { days: HeatmapDay[]; acti
           <span>Más</span>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
