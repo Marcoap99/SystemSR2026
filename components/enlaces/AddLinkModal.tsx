@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { createFreeResourceAction } from "@/lib/actions/resources";
 import type { ResourceFormat } from "@/lib/types";
 
@@ -63,13 +64,20 @@ export function AddLinkModal() {
         + Agregar
       </button>
 
-      {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={close}>
-          <div
-            className="w-full max-w-md rounded-card border border-border bg-surface p-6 shadow-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold text-text">Guardar algo</h2>
+      {/* Portal a document.body -- ver el comentario en NewLogEntryModal
+          (mismo bug: `fixed` capturado por un ancestro, se renderiza por
+          detrás de otros elementos pese al z-50). */}
+      {open
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+              onClick={close}
+            >
+              <div
+                className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-card border border-border bg-surface p-6 shadow-card"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-lg font-semibold text-text">Guardar algo</h2>
 
             <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-sm">
@@ -127,9 +135,11 @@ export function AddLinkModal() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      ) : null}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
