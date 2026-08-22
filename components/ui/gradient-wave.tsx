@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { shouldSkipShaderAnimation } from "@/lib/webgl-quality";
 
 function normalizeColor(hexCode: number): number[] {
   return [
@@ -675,6 +676,11 @@ void main() {
     }
   }
 
+  /** Un solo frame, sin loop -- para cuando no conviene animar (software rendering). */
+  renderStaticFrame(): void {
+    this.minigl.render();
+  }
+
   /**
    * Se llama al desmontar (en vez de solo stop()). Saca el listener de
    * `window` -- sin esto se acumula uno por cada montaje (cambio de
@@ -757,7 +763,15 @@ export function GradientWave({
         ...deform,
       });
 
-      if (isPlaying) gradient.start();
+      // Si el navegador cayó a software rendering, o el sistema pide
+      // prefers-reduced-motion, animar a pantalla completa sin parar
+      // puede pegar un núcleo de CPU entero -- se deja un solo frame
+      // estático en vez del loop.
+      if (isPlaying && !shouldSkipShaderAnimation(gradient.minigl.gl)) {
+        gradient.start();
+      } else {
+        gradient.renderStaticFrame();
+      }
     } catch (error) {
       console.error("Failed to initialize gradient:", error);
     }

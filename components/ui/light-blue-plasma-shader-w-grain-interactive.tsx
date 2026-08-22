@@ -7,6 +7,7 @@
 
 
 import { useEffect, useRef } from "react"
+import { shouldSkipShaderAnimation } from "@/lib/webgl-quality"
 
 const VERT = `attribute vec2 a_position;
 void main() {
@@ -409,7 +410,12 @@ export function ShaderBackground({ className }: { className?: string }) {
     let inView = true
     let disposed = false
     const start = performance.now()
-    const timeAnimated = Math.abs(UNIFORMS.timeScale) > 0.0001
+    // Si el navegador cayó a software rendering (SwiftShader, llvmpipe...)
+    // o el sistema pide prefers-reduced-motion, animar a pantalla completa
+    // sin parar puede pegar un núcleo de CPU entero -- se deja un solo
+    // frame estático (render() de abajo igual pinta uno la primera vez)
+    // en vez de re-pedir frames para siempre.
+    const timeAnimated = Math.abs(UNIFORMS.timeScale) > 0.0001 && !shouldSkipShaderAnimation(gl)
 
     const resizeCanvas = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2)

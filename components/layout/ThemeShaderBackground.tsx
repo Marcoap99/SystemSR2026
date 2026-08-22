@@ -9,6 +9,15 @@ function readTheme(): "light" | "dark" {
   return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
 }
 
+// Apagador manual de diagnóstico: ?sin-fondo=1 en la URL. No es una
+// preferencia que se guarda -- es solo para poder confirmar en el
+// momento si un problema de rendimiento viene de acá o no, sin tener
+// que tocar código para probarlo.
+function shaderDisabledByQuery(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("sin-fondo") === "1";
+}
+
 /**
  * Fondo animado global, uno por tema: GradientWave (ola de gradiente
  * celeste/blanco) en claro, el shader oscuro rojo/naranja con grano en
@@ -33,6 +42,7 @@ function readTheme(): "light" | "dark" {
  */
 export function ThemeShaderBackground() {
   const [theme, setTheme] = useState<"light" | "dark">(() => readTheme());
+  const [disabled] = useState(() => shaderDisabledByQuery());
 
   useEffect(() => {
     const observer = new MutationObserver(() => setTheme(readTheme()));
@@ -42,6 +52,8 @@ export function ThemeShaderBackground() {
     });
     return () => observer.disconnect();
   }, []);
+
+  if (disabled) return null;
 
   return (
     <div className="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
