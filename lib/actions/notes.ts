@@ -53,37 +53,49 @@ export async function saveResourceNotesAction(resourceId: string, doc: NoteDocum
  * pide el parche -- el bucket no es público). Corre en el server action
  * (no en el cliente) para reusar el cliente de Supabase ya autenticado
  * por cookie y validar tamaño/tipo antes de gastar el upload.
+ *
+ * Todo el cuerpo va envuelto en try/catch: sin esto, cualquier excepción
+ * no controlada (ej. un corte de red hacia Supabase a mitad del upload)
+ * se escapa del server action sin pasar por los `return { error }` de
+ * abajo. Next no puede empaquetar esa excepción como respuesta RSC válida
+ * y el cliente termina mostrando su propio mensaje genérico en inglés
+ * ("An unexpected response was received from the server") en vez del
+ * motivo real -- que es justo el bug que reportó el usuario.
  */
 export async function uploadNoteImageAction(
   resourceId: string,
   formData: FormData,
 ): Promise<{ url: string } | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "No autenticado" };
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { error: "No autenticado" };
 
-  const file = formData.get("file");
-  if (!(file instanceof File)) return { error: "Archivo inválido" };
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) return { error: "Tipo de archivo no permitido" };
-  if (file.size > MAX_IMAGE_BYTES) return { error: "La imagen supera los 5 MB" };
+    const file = formData.get("file");
+    if (!(file instanceof File)) return { error: "Archivo inválido" };
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) return { error: "Tipo de archivo no permitido" };
+    if (file.size > MAX_IMAGE_BYTES) return { error: "La imagen supera los 5 MB" };
 
-  const ext = EXT_BY_TYPE[file.type] ?? "bin";
-  const path = `${user.id}/${resourceId}/${Date.now()}.${ext}`;
+    const ext = EXT_BY_TYPE[file.type] ?? "bin";
+    const path = `${user.id}/${resourceId}/${Date.now()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("notas")
-    .upload(path, file, { contentType: file.type });
-  if (uploadError) return { error: uploadError.message };
+    const { error: uploadError } = await supabase.storage
+      .from("notas")
+      .upload(path, file, { contentType: file.type });
+    if (uploadError) return { error: uploadError.message };
 
-  // 1 año, como pide el parche ("expiración larga").
-  const { data: signed, error: signError } = await supabase.storage
-    .from("notas")
-    .createSignedUrl(path, 60 * 60 * 24 * 365);
-  if (signError || !signed) return { error: signError?.message ?? "No se pudo firmar la URL" };
+    // 1 año, como pide el parche ("expiración larga").
+    const { data: signed, error: signError } = await supabase.storage
+      .from("notas")
+      .createSignedUrl(path, 60 * 60 * 24 * 365);
+    if (signError || !signed) return { error: signError?.message ?? "No se pudo firmar la URL" };
 
-  return { url: signed.signedUrl };
+    return { url: signed.signedUrl };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Error de red al subir la imagen" };
+  }
 }
 
 /**
