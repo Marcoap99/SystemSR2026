@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { es as esDictionary } from "@blocknote/core/locales";
 import { filterSuggestionItems } from "@blocknote/core/extensions";
 import type { Block, PartialBlock } from "@blocknote/core";
@@ -13,6 +13,7 @@ import {
 } from "@blocknote/react";
 import "@blocknote/mantine/style.css";
 import { noteEditorTheme } from "@/components/notes/blocknote-theme";
+import { ImageLightbox } from "@/components/notes/ImageLightbox";
 
 /**
  * V1.3 parche sección 3 — el slash menu por defecto de BlockNote trae
@@ -97,6 +98,17 @@ export function NoteEditor({
     editor.focus();
   }, [editor]);
 
+  // Click en una imagen del contenido -> agrandarla en un lightbox, en vez
+  // de solo ubicar el cursor ahí. Delegado sobre el contenedor (no un
+  // listener por imagen) porque BlockNote re-renderiza los bloques de
+  // imagen libremente; escuchar acá cubre las que ya existen y las que se
+  // suben después, sin re-suscribirse.
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  function handleContentClick(e: React.MouseEvent<HTMLDivElement>) {
+    const img = (e.target as HTMLElement).closest("img");
+    if (img?.src) setLightboxSrc(img.src);
+  }
+
   const slashMenuItems = useMemo<DefaultReactSuggestionItem[]>(() => {
     return (getDefaultReactSlashMenuItems(editor) as SlashItemWithKey[])
       .filter((item) => isAllowedKey(item.key))
@@ -104,18 +116,21 @@ export function NoteEditor({
   }, [editor]);
 
   return (
-    <BlockNoteView
-      editor={editor}
-      editable={editable}
-      theme={{ light: noteEditorTheme, dark: noteEditorTheme }}
-      slashMenu={false}
-      onChange={() => onChangeDoc(editor.document)}
-      className="bn-notes-editor"
-    >
-      <SuggestionMenuController
-        triggerCharacter="/"
-        getItems={async (query) => filterSuggestionItems(slashMenuItems, query)}
-      />
-    </BlockNoteView>
+    <div onClickCapture={handleContentClick}>
+      <BlockNoteView
+        editor={editor}
+        editable={editable}
+        theme={{ light: noteEditorTheme, dark: noteEditorTheme }}
+        slashMenu={false}
+        onChange={() => onChangeDoc(editor.document)}
+        className="bn-notes-editor"
+      >
+        <SuggestionMenuController
+          triggerCharacter="/"
+          getItems={async (query) => filterSuggestionItems(slashMenuItems, query)}
+        />
+      </BlockNoteView>
+      {lightboxSrc ? <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} /> : null}
+    </div>
   );
 }
