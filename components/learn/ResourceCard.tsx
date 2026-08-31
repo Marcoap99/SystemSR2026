@@ -3,6 +3,7 @@
 import { useState, useTransition, type KeyboardEvent } from "react";
 import { updateResourceStatusAction } from "@/lib/actions/resources";
 import { NotesModal } from "@/components/notes/NotesModal";
+import { isOverdueResource } from "@/lib/domain/backlog";
 import type { ItemStatus, Resource, ResourceFormat, ResourceLanguage, ResourceTier } from "@/lib/types";
 
 const STATUS_CYCLE: ItemStatus[] = ["pending", "in_progress", "done"];
@@ -47,10 +48,19 @@ const TIER_LABEL: Record<ResourceTier, string> = {
  * el modal -- por eso la tarjeta no puede ser un <button> real (no se
  * puede anidar un botón dentro de otro), es un div con role="button".
  */
-export function ResourceCard({ resource, locked = false }: { resource: Resource; locked?: boolean }) {
+export function ResourceCard({
+  resource,
+  locked = false,
+  currentWeekNumber = null,
+}: {
+  resource: Resource;
+  locked?: boolean;
+  currentWeekNumber?: number | null;
+}) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(resource.status);
   const [pending, startTransition] = useTransition();
+  const overdue = isOverdueResource({ week: resource.week, status }, currentWeekNumber);
 
   function cycleStatus() {
     const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(status) + 1) % STATUS_CYCLE.length]!;
@@ -92,7 +102,13 @@ export function ResourceCard({ resource, locked = false }: { resource: Resource;
                 <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">{resource.duration_min} min</span>
               ) : null}
               {resource.week ? (
-                <span className="rounded-badge bg-surface-2 px-1.5 py-0.5">Semana {resource.week}</span>
+                <span
+                  className={
+                    "rounded-badge px-1.5 py-0.5 " + (overdue ? "bg-warn/15 text-warn" : "bg-surface-2")
+                  }
+                >
+                  {overdue ? `Atrasado · Semana ${resource.week}` : `Semana ${resource.week}`}
+                </span>
               ) : null}
               {/* V1.4: tier es null solo para recursos libres, que /aprender ya no trae -- este guard es solo tipado. */}
               {resource.tier ? (

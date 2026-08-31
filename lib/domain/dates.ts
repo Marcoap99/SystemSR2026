@@ -61,6 +61,12 @@ export function isFriday(iso: string): boolean {
   return parseISODate(iso).getUTCDay() === 5;
 }
 
+/** true si `iso` cae en sábado o domingo. */
+export function isWeekend(iso: string): boolean {
+  const day = parseISODate(iso).getUTCDay(); // 0=domingo .. 6=sábado
+  return day === 0 || day === 6;
+}
+
 /** Lunes de la semana ISO que contiene `iso`. */
 export function mondayOf(iso: string): string {
   const d = parseISODate(iso);

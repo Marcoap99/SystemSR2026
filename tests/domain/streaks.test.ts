@@ -118,6 +118,37 @@ describe("daily_english — freeze (criterio de aceptación #5)", () => {
   });
 });
 
+describe("daily_english — fin de semana no es período", () => {
+  it("de viernes a lunes no hay salto (el finde no cuenta)", () => {
+    const state = freshState({ current: 9, longest: 9, lastMarked: "2026-08-28" }); // viernes
+    const display = getDisplayState(state, "daily_english", "2026-08-31"); // lunes
+    expect(display.status).toBe("ok");
+    expect(display.current).toBe(9);
+  });
+
+  it("marcar el lunes después de un viernes suma normal, no resetea", () => {
+    const state = freshState({ current: 9, longest: 9, lastMarked: "2026-08-28" });
+    const { state: next, events } = markPeriod(state, "daily_english", "2026-08-31");
+    expect(next.current).toBe(10);
+    expect(next.longest).toBe(10);
+    expect(events).toEqual([{ action: "marked", period: "2026-08-31" }]);
+  });
+
+  it("saltarse el lunes (después del viernes) sí cuenta como warn", () => {
+    const state = freshState({ current: 9, longest: 9, lastMarked: "2026-08-28" }); // viernes
+    const display = getDisplayState(state, "daily_english", "2026-09-01"); // martes: se saltó el lunes
+    expect(display.status).toBe("warn");
+    expect(display.current).toBe(9);
+  });
+
+  it("saltarse lunes y martes sí rompe la racha", () => {
+    const state = freshState({ current: 9, longest: 9, lastMarked: "2026-08-28" }); // viernes
+    const display = getDisplayState(state, "daily_english", "2026-09-02"); // miércoles
+    expect(display.status).toBe("ok");
+    expect(display.current).toBe(0);
+  });
+});
+
 describe("weekly_log", () => {
   it("marca la semana en curso al crear un log_entry (criterio de aceptación #6, vía markPeriod)", () => {
     // Semana del 2026-08-17 (lunes) al 2026-08-23.

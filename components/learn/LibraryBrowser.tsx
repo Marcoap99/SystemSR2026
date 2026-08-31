@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { TrackSection } from "@/components/learn/TrackSection";
+import { isOverdueResource } from "@/lib/domain/backlog";
 import { groupProgress } from "@/lib/domain/progress";
 import type { LearnItemsData } from "@/lib/data/learn-items";
 import type { ResourceFormat, ResourceTier } from "@/lib/types";
@@ -42,13 +43,19 @@ export function LibraryBrowser({ data }: { data: LearnItemsData }) {
   const filteredTracks = useMemo(() => {
     return tracks.map((trackGroup) => {
       const items = trackGroup.items.map((g) => {
-        const resources = g.resources.filter((r) => {
-          if (weekFilter === "current" && r.week !== currentWeekNumber) return false;
-          if (typeof weekFilter === "number" && r.week !== weekFilter) return false;
-          if (formatFilter !== "all" && r.format !== formatFilter) return false;
-          if (tierFilter !== "all" && r.tier !== tierFilter) return false;
-          return true;
-        });
+        const resources = g.resources
+          .filter((r) => {
+            if (weekFilter === "current" && r.week !== currentWeekNumber && !isOverdueResource(r, currentWeekNumber))
+              return false;
+            if (typeof weekFilter === "number" && r.week !== weekFilter) return false;
+            if (formatFilter !== "all" && r.format !== formatFilter) return false;
+            if (tierFilter !== "all" && r.tier !== tierFilter) return false;
+            return true;
+          })
+          .sort(
+            (a, b) =>
+              Number(isOverdueResource(b, currentWeekNumber)) - Number(isOverdueResource(a, currentWeekNumber)),
+          );
         return { ...g, resources, progress: groupProgress(resources) };
       });
       const trackResources = items.flatMap((g) => g.resources);
@@ -110,7 +117,13 @@ export function LibraryBrowser({ data }: { data: LearnItemsData }) {
         <p className="text-sm text-text-muted">Sin recursos para estos filtros.</p>
       ) : (
         filteredTracks.map((t) => (
-          <TrackSection key={t.track} track={t.track} items={t.items} progress={t.progress} />
+          <TrackSection
+            key={t.track}
+            track={t.track}
+            items={t.items}
+            progress={t.progress}
+            currentWeekNumber={currentWeekNumber}
+          />
         ))
       )}
     </div>

@@ -31,12 +31,14 @@ export function LearnCodeGroup({
   progress,
   locked,
   lockReason,
+  currentWeekNumber,
 }: {
   item: LearnItem;
   resources: Resource[];
   progress: GroupProgress;
   locked: boolean;
   lockReason: string | null;
+  currentWeekNumber: number | null;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -105,7 +107,7 @@ export function LearnCodeGroup({
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {resources.map((resource) => (
-          <ResourceCard key={resource.id} resource={resource} locked={locked} />
+          <ResourceCard key={resource.id} resource={resource} locked={locked} currentWeekNumber={currentWeekNumber} />
         ))}
       </div>
     </div>

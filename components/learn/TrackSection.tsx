@@ -16,10 +16,12 @@ export function TrackSection({
   track,
   items,
   progress,
+  currentWeekNumber,
 }: {
   track: LearnTrack;
   items: LearnCodeGroupData[];
   progress: GroupProgress;
+  currentWeekNumber: number | null;
 }) {
   const visibleItems = items.filter((g) => g.resources.length > 0);
   if (visibleItems.length === 0) return null;
@@ -47,6 +49,7 @@ export function TrackSection({
             progress={g.progress}
             locked={g.locked}
             lockReason={g.lockReason}
+            currentWeekNumber={currentWeekNumber}
           />
         ))}
       </div>

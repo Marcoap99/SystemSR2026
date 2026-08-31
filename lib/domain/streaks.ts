@@ -3,8 +3,15 @@
  * puras: reciben estado + fecha de hoy, devuelven el próximo estado y los
  * `streak_events` a persistir. Nada de acceso a red ni a reloj acá — eso
  * vive en la capa de datos, que llama a `today()` de dates.ts una sola vez.
+ *
+ * daily_english cuenta en días hábiles (lunes a viernes): sábado y domingo
+ * no son período, así que no marcarla el finde nunca la pone en warn ni la
+ * rompe. Sigue siendo diaria de lunes a viernes -- el "todos los días" del
+ * PRD original se ajustó a esto porque romper la racha por un fin de
+ * semana en el que la app ni pedía nada es la penalidad que el PRD
+ * prohíbe, no tolerancia real.
  */
-import { addDays, diffDays, diffWeeks, mondayOf, quarterOf } from "./dates";
+import { addDays, diffWeeks, isWeekend, mondayOf, quarterOf } from "./dates";
 
 export type StreakKind = "daily_english" | "weekly_log";
 export type StreakStatus = "ok" | "warn";
@@ -41,13 +48,41 @@ function periodOf(kind: StreakKind, dateISO: string): string {
   return kind === "weekly_log" ? mondayOf(dateISO) : dateISO;
 }
 
+/**
+ * Días hábiles (lunes a viernes) entre `fromISO` (exclusivo) y `toISO`
+ * (inclusivo) -- sábado y domingo no son período para daily_english:
+ * no todos pueden marcarla el finde (sin laptop, etc.), y perder la
+ * racha por un día que ni siquiera pedía nada sería justo el tipo de
+ * penalidad que el PRD prohíbe. Itera día a día porque el rango siempre
+ * es chico (una racha rota se detecta en días/semanas, no en años).
+ */
+function businessDaysBetween(fromISO: string, toISO: string): number {
+  let count = 0;
+  let cur = fromISO;
+  while (cur < toISO) {
+    cur = addDays(cur, 1);
+    if (!isWeekend(cur)) count++;
+  }
+  return count;
+}
+
+function addBusinessDays(fromISO: string, n: number): string {
+  let cur = fromISO;
+  let added = 0;
+  while (added < n) {
+    cur = addDays(cur, 1);
+    if (!isWeekend(cur)) added++;
+  }
+  return cur;
+}
+
 /** Períodos completos (kind) entre dos fechas. 0 = mismo período, 1 = el siguiente, etc. */
 function periodsBetween(kind: StreakKind, fromISO: string, toISO: string): number {
-  return kind === "weekly_log" ? diffWeeks(fromISO, toISO) : diffDays(fromISO, toISO);
+  return kind === "weekly_log" ? diffWeeks(fromISO, toISO) : businessDaysBetween(fromISO, toISO);
 }
 
 function addPeriod(kind: StreakKind, periodISO: string, n: number): string {
-  return kind === "weekly_log" ? addDays(periodISO, 7 * n) : addDays(periodISO, n);
+  return kind === "weekly_log" ? addDays(periodISO, 7 * n) : addBusinessDays(periodISO, n);
 }
 
 /**
