@@ -7,6 +7,7 @@ import { freezeStreakAction, markStreakAction } from "@/lib/actions/streaks";
 import { today } from "@/lib/domain/dates";
 import { getDisplayState, type StreakKind, type StreakState } from "@/lib/domain/streaks";
 import type { Streak } from "@/lib/types";
+import { DuolingoConnect } from "./DuolingoConnect";
 import { NewLogEntryModal } from "./NewLogEntryModal";
 
 const LABELS: Record<StreakKind, string> = {
@@ -26,7 +27,15 @@ function toState(row: Streak): StreakState {
 }
 
 /** 7.1 (4): número grande, estado (ok/warn), freezes como copos, acción de marcar. */
-export function StreakCard({ kind, streak }: { kind: StreakKind; streak: Streak | undefined }) {
+export function StreakCard({
+  kind,
+  streak,
+  duolingoUsername = null,
+}: {
+  kind: StreakKind;
+  streak: Streak | undefined;
+  duolingoUsername?: string | null;
+}) {
   const [pending, startTransition] = useTransition();
   const [justMarked, setJustMarked] = useState(false);
   const todayISO = today();
@@ -110,6 +119,12 @@ export function StreakCard({ kind, streak }: { kind: StreakKind; streak: Streak 
           </button>
         ) : null}
       </div>
+
+      {kind === "daily_english" ? (
+        <div className="mt-3">
+          <DuolingoConnect username={duolingoUsername} />
+        </div>
+      ) : null}
     </Card>
   );
 }

@@ -243,6 +243,16 @@ export type Streak = {
   quarter: string;
 };
 
+// V1.7 — sin id ni created_at (fila única por usuario, user_id es la PK),
+// así que no encaja en el patrón TableOf/WithDefaults de las demás tablas.
+export type UserSettings = {
+  user_id: string;
+  duolingo_username: string | null;
+  duolingo_last_streak: number;
+  duolingo_last_checked_at: string | null;
+  updated_at: string;
+};
+
 export type StreakEvent = {
   id: string;
   created_at: string;
@@ -346,6 +356,13 @@ export type Database = {
       streak_events: TableOf<StreakEvent>;
       log_entries: TableOf<LogEntry, "date" | "ref_code">;
       app_events: TableOf<AppEvent, "payload">;
+      // No usa TableOf: user_settings no tiene id/created_at (ver el tipo).
+      user_settings: {
+        Row: UserSettings;
+        Insert: Partial<UserSettings>;
+        Update: Partial<UserSettings>;
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };

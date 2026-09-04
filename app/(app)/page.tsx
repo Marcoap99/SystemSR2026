@@ -38,7 +38,11 @@ export default async function DashboardPage() {
 
       {/* 4. Rachas — 2 tarjetas */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <StreakCard kind="daily_english" streak={data.streaks.daily_english} />
+        <StreakCard
+          kind="daily_english"
+          streak={data.streaks.daily_english}
+          duolingoUsername={data.duolingoUsername}
+        />
         <StreakCard kind="weekly_log" streak={data.streaks.weekly_log} />
       </div>
 

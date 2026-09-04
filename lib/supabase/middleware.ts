@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/types";
+import { today } from "@/lib/domain/dates";
 import { logAppEvent } from "@/lib/server/events";
+import { syncDuolingoStreak } from "@/lib/server/duolingo-sync";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -78,6 +80,9 @@ export async function updateSession(request: NextRequest) {
     if (request.method === "GET" && !isPrefetch) {
       if (path === "/") {
         await logAppEvent(supabase, "app_open");
+        // V1.7: mismo gate que app_open -- una apertura real de la app,
+        // no cada revalidate. syncDuolingoStreak ya es best-effort adentro.
+        await syncDuolingoStreak(supabase, today());
       } else {
         const section = sectionNameFor(path);
         if (section) await logAppEvent(supabase, "section_view", { section });

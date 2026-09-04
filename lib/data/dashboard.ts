@@ -35,6 +35,8 @@ export interface DashboardData {
   recentLog: LogEntry[];
   greeting: string;
   badges: BadgeState[];
+  // V1.7: null si nunca configuró Duolingo -- StreakCard decide qué mostrar.
+  duolingoUsername: string | null;
 }
 
 /** Carga y deriva todo lo que necesita el dashboard (7.1) en un solo lugar. */
@@ -53,6 +55,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     { data: recentLog },
     { data: artifactDoneEvents },
     { data: ex4Events },
+    { data: userSettings },
   ] = await Promise.all([
     supabase.from("phases").select("*").order("number"),
     supabase.from("weeks").select("*").order("number"),
@@ -79,6 +82,8 @@ export async function getDashboardData(): Promise<DashboardData> {
       .eq("counts", true)
       .order("date", { ascending: false })
       .limit(1),
+    // V1.7: fila puede no existir (nunca tocó el ajuste) -- maybeSingle.
+    supabase.from("user_settings").select("duolingo_username").maybeSingle(),
   ]);
 
   const weekRow = currentWeek((weeks ?? []) as Week[], todayISO);
@@ -200,5 +205,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     recentLog: (recentLog ?? []) as LogEntry[],
     greeting,
     badges,
+    duolingoUsername: userSettings?.duolingo_username ?? null,
   };
 }
