@@ -21,7 +21,11 @@ export async function saveDuolingoUsernameAction(username: string | null) {
   const supabase = await createClient();
   const user = await requireUser(supabase);
 
-  const trimmed = username?.trim() || null;
+  // El perfil de Duolingo se muestra con "@" adelante, pero la API pública
+  // solo resuelve el username pelado -- pegar el username tal como
+  // aparece en la app de Duolingo (con @) es el caso esperado, no un error
+  // del usuario, así que se normaliza acá en vez de fallar en silencio.
+  const trimmed = username?.trim().replace(/^@/, "") || null;
 
   const { error } = await supabase
     .from("user_settings")

@@ -24,7 +24,10 @@ const RECHECK_MINUTES = 30;
 
 async function fetchDuolingoStreak(username: string): Promise<number | null> {
   try {
-    const res = await fetch(`${DUOLINGO_USERS_ENDPOINT}?username=${encodeURIComponent(username)}`, {
+    // Defensivo: si quedó guardado con "@" adelante (como se ve en la app
+    // de Duolingo) de antes de normalizarlo en saveDuolingoUsernameAction.
+    const clean = username.replace(/^@/, "");
+    const res = await fetch(`${DUOLINGO_USERS_ENDPOINT}?username=${encodeURIComponent(clean)}`, {
       headers: { "User-Agent": "Mozilla/5.0" },
     });
     if (!res.ok) return null;
