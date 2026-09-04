@@ -31,22 +31,36 @@ export function StreakCard({
   kind,
   streak,
   duolingoUsername = null,
+  duolingoLastStreak = null,
 }: {
   kind: StreakKind;
   streak: Streak | undefined;
   duolingoUsername?: string | null;
+  duolingoLastStreak?: number | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [justMarked, setJustMarked] = useState(false);
   const todayISO = today();
 
   const state = streak ? toState(streak) : null;
-  const display = state
+  const ownDisplay = state
     ? getDisplayState(state, kind, todayISO)
     : { current: 0, status: "ok" as const };
+
+  // V1.7.1: con Duolingo conectado, lo que se ve es el streak que Duolingo
+  // reporta, no el propio -- son dos formas distintas de contar (Duolingo
+  // cuenta todos los días, acá solo días hábiles) y nunca van a coincidir
+  // número a número. El propio sigue vivo por debajo (freezes, insignias),
+  // pero mostrar dos números que dicen cosas distintas es más confuso que
+  // mostrar el que el usuario realmente mira.
+  const duolingoConnected = kind === "daily_english" && duolingoLastStreak !== null;
+  const display = duolingoConnected
+    ? { current: duolingoLastStreak, status: "ok" as const }
+    : ownDisplay;
+
   const freezesTotal = state?.freezesTotal ?? 2;
   const freezesAvailable = state ? state.freezesTotal - state.freezesUsed : freezesTotal;
-  const canFreeze = display.status === "warn" && freezesAvailable > 0;
+  const canFreeze = !duolingoConnected && ownDisplay.status === "warn" && freezesAvailable > 0;
 
   return (
     <Card>
@@ -78,30 +92,40 @@ export function StreakCard({
         </span>
       </div>
 
-      <div className="mt-3 flex items-center gap-1 text-base" aria-label="Freezes disponibles este trimestre">
-        {Array.from({ length: freezesTotal }).map((_, i) => (
-          <span key={i} className={i < freezesAvailable ? "text-brand" : "text-border"} aria-hidden="true">
-            ❄
-          </span>
-        ))}
-      </div>
+      {!duolingoConnected ? (
+        <div className="mt-3 flex items-center gap-1 text-base" aria-label="Freezes disponibles este trimestre">
+          {Array.from({ length: freezesTotal }).map((_, i) => (
+            <span key={i} className={i < freezesAvailable ? "text-brand" : "text-border"} aria-hidden="true">
+              ❄
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {kind === "daily_english" ? (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() =>
-              startTransition(async () => {
-                await markStreakAction(kind);
-                setJustMarked(true);
-                setTimeout(() => setJustMarked(false), 300);
-              })
-            }
-            className="rounded-card bg-brand px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
-          >
-            Marcar hoy
-          </button>
+          duolingoConnected ? (
+            // V1.7.1: con Duolingo conectado, hacer el lección ahí ya la
+            // marca sola (ver DuolingoConnect/syncDuolingoStreak) -- un
+            // botón de "Marcar hoy" acá sería una segunda fuente de verdad
+            // que puede desalinearse con lo que Duolingo ya dice.
+            <p className="text-xs text-text-muted">Se marca sola cuando hacés tu lección en Duolingo.</p>
+          ) : (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  await markStreakAction(kind);
+                  setJustMarked(true);
+                  setTimeout(() => setJustMarked(false), 300);
+                })
+              }
+              className="rounded-card bg-brand px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+            >
+              Marcar hoy
+            </button>
+          )
         ) : (
           // 6.2: weekly_log se marca automáticamente al crear un log_entry
           // de la semana en curso — no hay un "marcar" suelto sin evidencia.

@@ -42,6 +42,7 @@ export default async function DashboardPage() {
           kind="daily_english"
           streak={data.streaks.daily_english}
           duolingoUsername={data.duolingoUsername}
+          duolingoLastStreak={data.duolingoLastStreak}
         />
         <StreakCard kind="weekly_log" streak={data.streaks.weekly_log} />
       </div>

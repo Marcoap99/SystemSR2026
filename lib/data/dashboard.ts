@@ -37,6 +37,12 @@ export interface DashboardData {
   badges: BadgeState[];
   // V1.7: null si nunca configuró Duolingo -- StreakCard decide qué mostrar.
   duolingoUsername: string | null;
+  // V1.7.1: el streak que Duolingo devolvió la última vez que se sincronizó
+  // (puede ser más nuevo que el `current` de daily_english si hoy todavía
+  // no se abrió esta app). Con Duolingo conectado, StreakCard muestra este
+  // número en vez del propio -- el propio sigue existiendo por debajo para
+  // freezes/insignias, pero lo que el usuario ve es lo que dice Duolingo.
+  duolingoLastStreak: number | null;
 }
 
 /** Carga y deriva todo lo que necesita el dashboard (7.1) en un solo lugar. */
@@ -83,7 +89,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("date", { ascending: false })
       .limit(1),
     // V1.7: fila puede no existir (nunca tocó el ajuste) -- maybeSingle.
-    supabase.from("user_settings").select("duolingo_username").maybeSingle(),
+    supabase.from("user_settings").select("duolingo_username, duolingo_last_streak").maybeSingle(),
   ]);
 
   const weekRow = currentWeek((weeks ?? []) as Week[], todayISO);
@@ -206,5 +212,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     greeting,
     badges,
     duolingoUsername: userSettings?.duolingo_username ?? null,
+    duolingoLastStreak: userSettings?.duolingo_username ? (userSettings?.duolingo_last_streak ?? 0) : null,
   };
 }
