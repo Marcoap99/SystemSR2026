@@ -21,6 +21,11 @@ import { logAppEvent } from "@/lib/server/events";
 
 const DUOLINGO_USERS_ENDPOINT = "https://www.duolingo.com/2017-06-30/users";
 const RECHECK_MINUTES = 30;
+// Esto corre adentro del middleware, en el camino de CADA apertura real de
+// "/" -- sin este timeout, una Duolingo lenta o inalcanzable desde la red
+// del usuario podía colgar esa request enterita (el fetch no tiene límite
+// propio) y la app entera parecía trabada, no solo el sync.
+const FETCH_TIMEOUT_MS = 4000;
 
 async function fetchDuolingoStreak(username: string): Promise<number | null> {
   try {
@@ -29,6 +34,7 @@ async function fetchDuolingoStreak(username: string): Promise<number | null> {
     const clean = username.replace(/^@/, "");
     const res = await fetch(`${DUOLINGO_USERS_ENDPOINT}?username=${encodeURIComponent(clean)}`, {
       headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { users?: Array<{ streak?: number }> };
