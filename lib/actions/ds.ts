@@ -51,3 +51,21 @@ export async function minimumViableDayAction() {
   if (error) throw new Error(error.message);
   revalidatePath("/nucleo");
 }
+
+export async function saveReviewAction(week: number, answers: Record<string, string>, nextResults: string[]) {
+  const db = await authed();
+  const clean = Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, v.slice(0, 600)]));
+  const next = nextResults.map((s) => s.trim().slice(0, 140)).filter(Boolean).slice(0, 3);
+  const { error } = await db
+    .from("ds_reviews")
+    .upsert({ week, answers: clean, next_results: next }, { onConflict: "user_id,week" });
+  if (error) throw new Error(error.message);
+  revalidatePath("/domingo");
+}
+
+export async function setDsResourceStatusAction(id: string, status: "pending" | "in_progress" | "done") {
+  const db = await authed();
+  const { error } = await db.from("ds_resources").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/ruta");
+}

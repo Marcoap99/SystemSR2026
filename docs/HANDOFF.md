@@ -17,6 +17,8 @@ Marco dio GO total: no volver a preguntar; decidir con criterio. Login Google = 
 - Núcleo (V1) en `/nucleo`: `lib/domain/ds.ts` (+tests), `lib/data/ds-nucleo.ts`, `lib/actions/ds.ts`, `components/nucleo/{Orb,Results,CommandBar}.tsx`, link en NavBar. Aditivo: el Panel viejo (`/`) sigue intacto. Jarvis V1 con comandos de texto y voz (es-PE). Las tablas `ds_*` se leen con cliente sin tipos (`lib/supabase/ds.ts`) hasta regenerar `lib/types.ts`.
 - Falta del Núcleo: probarlo en el preview con login real, calendario de hoy (V2/iCal), racha Duolingo, ajuste fino vs `design/ref/Home1.dc.html`.
 
+- Carriles (`/carriles`), Domingo (`/domingo`, guarda en `ds_reviews`) y Ruta de la semana (`/ruta?s=N`, recursos de `ds_resources` con check y pieza). Todo aditivo. Falta: unificar Ruta + Inglés diario + Archivo + Backlog como pestañas dentro de Aprender (hoy `/aprender` viejo sigue intacto), página de Inglés/SQL con `ds_habit_log`, sembrar `ds_hours_log`/tareas reales.
+
 ## Pendiente (orden)
 1. Línea base: `npm ci && npm run test && npm run lint && npm run build`.
 2. Cargar `docs/plan_estudio_resources.md` a `ds_resources` (tier: nucleo/utilitario; verificar 1 núcleo + 1 utilitario por tema; Skillshop = parcial). Rellenar `ds_study_themes.piece`.

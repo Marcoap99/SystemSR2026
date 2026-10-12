@@ -1,0 +1,72 @@
+import { createDsClient } from "@/lib/supabase/ds";
+import { addDays, today } from "@/lib/domain/dates";
+import { currentDsWeek, mondayOf, type DsWeek, type Lane } from "@/lib/domain/ds";
+
+export interface WeekData {
+  todayISO: string;
+  week: DsWeek | null;
+  monday: string;
+  hours: Record<Lane, number>;
+  tasksDone: Record<Lane, number>;
+  tasksPending: Record<Lane, number>;
+  nextAction: Record<Lane, string | null>;
+  englishDays: number;
+  sqlDays: number;
+  routeB: number;
+  review: { answers: Record<string, string>; next_results: string[] } | null;
+}
+
+const zero = (): Record<Lane, number> => ({ A: 0, B: 0, C: 0 });
+
+export async function getWeekData(): Promise<WeekData> {
+  const db = await createDsClient();
+  const todayISO = today();
+  const monday = mondayOf(todayISO);
+  const friday = addDays(monday, 4);
+
+  const [weeks, hours, tasks, habits, routeB] = await Promise.all([
+    db.from("ds_weeks").select("number,starts_on,ends_on").order("number"),
+    db.from("ds_hours_log").select("lane,actual_h").gte("day", monday).lte("day", friday),
+    db.from("ds_tasks").select("lane,title,status,day,created_at").order("created_at"),
+    db.from("ds_habit_log").select("habit,minutes").gte("day", monday).lte("day", friday),
+    db.from("ds_routeb_actions").select("id", { count: "exact", head: true }).gte("day", monday).lte("day", friday),
+  ]);
+
+  const week = currentDsWeek(todayISO, (weeks.data ?? []) as DsWeek[]);
+  const h = zero();
+  for (const r of (hours.data ?? []) as { lane: Lane; actual_h: number }[]) if (r.lane in h) h[r.lane] += Number(r.actual_h);
+
+  const done = zero();
+  const pending = zero();
+  const next: Record<Lane, string | null> = { A: null, B: null, C: null };
+  for (const t of (tasks.data ?? []) as { lane: Lane; title: string; status: string; day: string | null }[]) {
+    if (!(t.lane in done)) continue;
+    if (t.status === "done") {
+      if (t.day && t.day >= monday && t.day <= friday) done[t.lane] += 1;
+    } else if (t.status === "pending") {
+      pending[t.lane] += 1;
+      next[t.lane] ??= t.title;
+    }
+  }
+
+  const habitRows = (habits.data ?? []) as { habit: string; minutes: number }[];
+  let review: WeekData["review"] = null;
+  if (week) {
+    const r = await db.from("ds_reviews").select("answers,next_results").eq("week", week.number).maybeSingle();
+    review = (r.data as WeekData["review"]) ?? null;
+  }
+
+  return {
+    todayISO,
+    week,
+    monday,
+    hours: h,
+    tasksDone: done,
+    tasksPending: pending,
+    nextAction: next,
+    englishDays: habitRows.filter((x) => x.habit === "english" && x.minutes > 0).length,
+    sqlDays: habitRows.filter((x) => x.habit === "sql" && x.minutes > 0).length,
+    routeB: routeB.count ?? 0,
+    review,
+  };
+}
