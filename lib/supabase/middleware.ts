@@ -4,8 +4,9 @@ import type { Database } from "@/lib/types";
 import { today } from "@/lib/domain/dates";
 import { logAppEvent } from "@/lib/server/events";
 import { syncDuolingoStreak } from "@/lib/server/duolingo-sync";
+import { isAllowedEmail } from "@/lib/auth/allowed";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
 /**
  * `app_open`/`section_view` viven acá, no dispersos en cada data loader,
@@ -63,6 +64,14 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (user && !isAllowedEmail(user.email)) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "?error=denied";
     return NextResponse.redirect(url);
   }
 

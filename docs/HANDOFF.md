@@ -9,10 +9,15 @@ Marco dio GO total: no volver a preguntar; decidir con criterio. Login Google = 
 - Seed: 3 `ds_phases`, 10 `ds_weeks`, 3 `ds_milestones`, 9 `ds_study_themes`.
 - Hallazgo: `resources` usa `status` (done/in_progress/pending) y `has_notes`, no `done`. Hoy: 11 done, 1 in_progress, 73 pending; 12 con notas.
 
+## Hecho (actualización)
+- `ds_resources`: 66 recursos cargados del .md (T1–T9, SQL, ING) con tier; `ds_study_themes.piece` rellenado (9). Falta: validar 1 núcleo + 1 utilitario por tema (T3/T5/T7/T8/T9 ok; SQL e ING tienen 1 núcleo).
+- Login Google en código: botón en /login, `app/auth/callback/route.ts`, `lib/auth/allowed.ts` (ALLOWED_EMAIL), gate en middleware. El formulario de contraseña queda como respaldo en `<details>` hasta verificar Google; retirarlo después y desactivar registros en Supabase Auth. test/lint/build en verde.
+- `design/ref/Centro_de_mando.html` guardado. OJO: NO trae las 12 tareas ni los 10 temas (viven en la base del artifact, colección tasks/study). Marco debe exportarlas (ver pendiente 3).
+
 ## Pendiente (orden)
 1. Línea base: `npm ci && npm run test && npm run lint && npm run build`.
 2. Cargar `docs/plan_estudio_resources.md` a `ds_resources` (tier: nucleo/utilitario; verificar 1 núcleo + 1 utilitario por tema; Skillshop = parcial). Rellenar `ds_study_themes.piece`.
-3. Importar 12 tareas y 10 temas del Centro de mando a `ds_tasks` (necesitan el artifact; pedir a Marco el export si no está).
+3. (Marco exporta tasks/study del artifact a JSON) Importar 12 tareas y 10 temas del Centro de mando a `ds_tasks` (necesitan el artifact; pedir a Marco el export si no está).
 4. Login Google (sección 2.1): `signInWithOAuth`, `ALLOWED_EMAIL`, proxy.ts; Marco configura Google Cloud + Supabase providers + Redirect URLs + env en Preview.
 5. UI en rama + preview Vercel: layout barra superior, tokens HUD, Núcleo (sin scroll 1360x800), Carriles, Aprender (4 pestañas), Domingo, comandos de voz (es-PE, Web Speech).
 6. Tests/lint/build en verde -> preview -> aprobación de Marco -> producción. Luego V2 (Semana/iCal, Red, Evidencia); Marco enviará wireframes W_* cuando se llegue a V2.
