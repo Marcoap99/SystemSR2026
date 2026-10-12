@@ -7,6 +7,7 @@ import { Container } from "./Container";
 import { ThemeToggle } from "./ThemeToggle";
 
 const LINKS = [
+  { href: "/nucleo", label: "Núcleo", accent: null },
   { href: "/", label: "Panel", accent: null },
   { href: "/aprender", label: "Aprender", accent: "aprender" },
   { href: "/notas", label: "Notas", accent: "aprender" },

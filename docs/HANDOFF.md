@@ -14,6 +14,9 @@ Marco dio GO total: no volver a preguntar; decidir con criterio. Login Google = 
 - Login Google en código: botón en /login, `app/auth/callback/route.ts`, `lib/auth/allowed.ts` (ALLOWED_EMAIL), gate en middleware. El formulario de contraseña queda como respaldo en `<details>` hasta verificar Google; retirarlo después y desactivar registros en Supabase Auth. test/lint/build en verde.
 - `design/ref/Centro_de_mando.html` guardado. OJO: NO trae las 12 tareas ni los 10 temas (viven en la base del artifact, colección tasks/study). Marco debe exportarlas (ver pendiente 3).
 
+- Núcleo (V1) en `/nucleo`: `lib/domain/ds.ts` (+tests), `lib/data/ds-nucleo.ts`, `lib/actions/ds.ts`, `components/nucleo/{Orb,Results,CommandBar}.tsx`, link en NavBar. Aditivo: el Panel viejo (`/`) sigue intacto. Jarvis V1 con comandos de texto y voz (es-PE). Las tablas `ds_*` se leen con cliente sin tipos (`lib/supabase/ds.ts`) hasta regenerar `lib/types.ts`.
+- Falta del Núcleo: probarlo en el preview con login real, calendario de hoy (V2/iCal), racha Duolingo, ajuste fino vs `design/ref/Home1.dc.html`.
+
 ## Pendiente (orden)
 1. Línea base: `npm ci && npm run test && npm run lint && npm run build`.
 2. Cargar `docs/plan_estudio_resources.md` a `ds_resources` (tier: nucleo/utilitario; verificar 1 núcleo + 1 utilitario por tema; Skillshop = parcial). Rellenar `ds_study_themes.piece`.
