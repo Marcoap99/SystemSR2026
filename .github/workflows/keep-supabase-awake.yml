@@ -1,0 +1,36 @@
+name: Keep Supabase awake
+
+# El plan gratis de Supabase pausa el proyecto después de ~7 días sin
+# actividad de API -- nadie abre la app seguido, así que se pausaba solo
+# y la próxima apertura fallaba (login raro, carga colgada) mientras
+# "despertaba". Este workflow pega un GET liviano y autenticado dos
+# veces por semana (lunes y jueves), bien por debajo de esos 7 días, para
+# que el proyecto nunca llegue a pausarse. No necesita datos reales: RLS
+# bloquea la fila igual (no hay sesión de usuario), el punto es la
+# actividad de API, no el contenido de la respuesta.
+on:
+  schedule:
+    - cron: "0 9 * * 1,4" # lunes y jueves, 09:00 UTC
+  workflow_dispatch: {} # para probarlo a mano desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          status=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/phases?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "Supabase respondió HTTP $status"
+          # 200/206/401/403 = el proyecto está despierto y respondiendo
+          # (403/401 solo significa que RLS bloqueó la fila, no que esté
+          # caído). Cualquier otra cosa (o timeout) sí es una falla real.
+          if [[ "$status" != "200" && "$status" != "206" && "$status" != "401" && "$status" != "403" ]]; then
+            echo "Respuesta inesperada, revisar." >&2
+            exit 1
+          fi
