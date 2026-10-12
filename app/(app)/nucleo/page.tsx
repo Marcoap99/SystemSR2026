@@ -30,6 +30,16 @@ export default async function NucleoPage() {
         <h1 className="text-2xl font-semibold text-text">{greetingFor(hour)}, Marco</h1>
       </header>
 
+      {d.zeroAlert ? (
+        <p role="status" className="rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
+          Ayer quedó en cero. Hoy no se repite: cierra un resultado chico, suma media hora o marca el día mínimo viable.
+        </p>
+      ) : d.daysToStart ? (
+        <p role="status" className="rounded-card border border-brand/30 bg-brand/10 px-4 py-3 text-sm text-text">
+          Faltan {d.daysToStart} días para el arranque del 19 de octubre.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-[310px_1fr_310px]">
         <div className="flex flex-col gap-4">
           <Panel label="Resultados de hoy">
@@ -71,6 +81,10 @@ export default async function NucleoPage() {
               <div>
                 <dt className="font-mono text-xs text-text-muted">Inglés semana</dt>
                 <dd className="text-text">{d.englishWeek}/5</dd>
+              </div>
+              <div>
+                <dt className="font-mono text-xs text-text-muted">Duolingo</dt>
+                <dd className="text-text">{d.duolingo ? `${d.duolingo.current} días (récord ${d.duolingo.longest})` : "—"}</dd>
               </div>
               <div>
                 <dt className="font-mono text-xs text-text-muted">Ruta B</dt>

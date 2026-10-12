@@ -4,6 +4,7 @@ import {
   currentDsWeek,
   daysToStart,
   mondayOf,
+  zeroDayAlert,
   type DsTask,
   type DsWeek,
   type Lane,
@@ -19,6 +20,8 @@ export interface NucleoData {
   englishToday: boolean;
   englishWeek: number;
   routeB: number;
+  duolingo: { current: number; longest: number } | null;
+  zeroAlert: boolean;
 }
 
 export async function getNucleoData(): Promise<NucleoData> {
@@ -27,14 +30,23 @@ export async function getNucleoData(): Promise<NucleoData> {
   const monday = mondayOf(todayISO);
   const friday = addDays(monday, 4);
 
-  const [weeks, tasks, hours, milestones, habits, routeB] = await Promise.all([
+  const lookback = addDays(todayISO, -7);
+  const [weeks, tasks, hours, milestones, habits, routeB, streak, recentTasks, recentHours, recentHabits] = await Promise.all([
     db.from("ds_weeks").select("number,starts_on,ends_on").order("number"),
     db.from("ds_tasks").select("id,lane,title,status,result_rank").eq("day", todayISO).order("result_rank"),
     db.from("ds_hours_log").select("lane,actual_h").gte("day", monday).lte("day", friday),
     db.from("ds_milestones").select("number,title,due_on,criteria,status").eq("status", "pending").order("number").limit(1),
     db.from("ds_habit_log").select("day,minutes").eq("habit", "english").gte("day", monday).lte("day", friday),
     db.from("ds_routeb_actions").select("id", { count: "exact", head: true }).gte("day", monday).lte("day", friday),
+    db.from("streaks").select("current,longest").eq("kind", "daily_english").maybeSingle(),
+    db.from("ds_tasks").select("day").eq("status", "done").gte("day", lookback),
+    db.from("ds_hours_log").select("day").gt("actual_h", 0).gte("day", lookback),
+    db.from("ds_habit_log").select("day").gt("minutes", 0).gte("day", lookback),
   ]);
+  const active = new Set<string>();
+  for (const q of [recentTasks, recentHours, recentHabits]) {
+    for (const r of (q.data ?? []) as { day: string }[]) active.add(r.day);
+  }
 
   const weekRows = (weeks.data ?? []) as DsWeek[];
   const sums: Record<Lane, number> = { A: 0, B: 0, C: 0 };
@@ -56,5 +68,7 @@ export async function getNucleoData(): Promise<NucleoData> {
     englishToday: habitRows.some((h) => h.day === todayISO && h.minutes > 0),
     englishWeek: habitRows.filter((h) => h.minutes > 0).length,
     routeB: routeB.count ?? 0,
+    duolingo: (streak.data as { current: number; longest: number } | null) ?? null,
+    zeroAlert: zeroDayAlert(todayISO, weekRows[0]?.starts_on ?? "9999-12-31", active),
   };
 }

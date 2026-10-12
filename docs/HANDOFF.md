@@ -22,6 +22,9 @@ Marco dio GO total: no volver a preguntar; decidir con criterio. Login Google = 
 - Registro de horas en Núcleo (`HoursButtons`, +/-0.5 h por carril -> `ds_hours_log`) y página `/habitos` (inglés 25 min / SQL 30 min -> `ds_habit_log`). NavBar: Núcleo, Carriles, Domingo, Ruta, Inglés/SQL, Archivo (= `/aprender` viejo), Notas, Enlaces, Conectar, Exponer, Log, Plan, Panel.
 - Falta V1: unificar nav final (ocultar pantallas viejas tras aprobación), aviso "ayer en cero", racha Duolingo en Núcleo, regenerar `lib/types.ts` con `ds_*`, ajuste visual contra Home1/Home3 en el preview.
 
+- Núcleo: aviso "ayer en cero" (`zeroDayAlert`, con tests), cuenta regresiva al 19/10 y racha Duolingo (`streaks.kind=daily_english`). 109 tests verdes.
+- Advisors de seguridad de Supabase (12/10): solo INFO por las 15 `archive_*` con RLS sin políticas (intencional: respaldo inaccesible por API) y WARN de contraseñas filtradas (se vuelve irrelevante al desactivar el login por contraseña).
+
 ## Pendiente (orden)
 1. Línea base: `npm ci && npm run test && npm run lint && npm run build`.
 2. Cargar `docs/plan_estudio_resources.md` a `ds_resources` (tier: nucleo/utilitario; verificar 1 núcleo + 1 utilitario por tema; Skillshop = parcial). Rellenar `ds_study_themes.piece`.

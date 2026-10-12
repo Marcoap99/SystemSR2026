@@ -63,3 +63,20 @@ describe("comandos", () => {
     expect(parseCommand("bailar")).toEqual({ kind: "unknown" });
   });
 });
+
+import { previousWorkday, zeroDayAlert } from "@/lib/domain/ds";
+
+describe("regla de no dos días en cero", () => {
+  it("el día laborable anterior salta el fin de semana", () => {
+    expect(previousWorkday("2026-10-19")).toBe("2026-10-16"); // lunes -> viernes
+    expect(previousWorkday("2026-10-21")).toBe("2026-10-20");
+  });
+  it("avisa solo con ayer y hoy en cero, en temporada y día laborable", () => {
+    const start = "2026-10-19";
+    expect(zeroDayAlert("2026-10-21", start, new Set())).toBe(true);
+    expect(zeroDayAlert("2026-10-21", start, new Set(["2026-10-20"]))).toBe(false);
+    expect(zeroDayAlert("2026-10-21", start, new Set(["2026-10-21"]))).toBe(false);
+    expect(zeroDayAlert("2026-10-18", start, new Set())).toBe(false); // antes de empezar
+    expect(zeroDayAlert("2026-10-24", start, new Set())).toBe(false); // sábado
+  });
+});

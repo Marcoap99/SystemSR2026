@@ -105,3 +105,27 @@ export function parseCommand(input: string): NucleoCommand {
   if (open) return { kind: "open", target: open[1] as "aprender" | "carriles" | "domingo" };
   return { kind: "unknown" };
 }
+
+/** Último día laborable (lun-vie) estrictamente anterior a `todayISO`. */
+export function previousWorkday(todayISO: string): string {
+  let d = addDays(todayISO, -1);
+  for (let i = 0; i < 7; i++) {
+    const [y, m, day] = d.split("-").map(Number) as [number, number, number];
+    const dow = new Date(Date.UTC(y, m - 1, day)).getUTCDay();
+    if (dow >= 1 && dow <= 5) return d;
+    d = addDays(d, -1);
+  }
+  return d;
+}
+
+/**
+ * Regla "nunca dos días en cero": avisa si el día laborable anterior no tuvo
+ * actividad y hoy tampoco (solo en temporada, en día laborable).
+ */
+export function zeroDayAlert(todayISO: string, seasonStart: string, activeDays: Set<string>): boolean {
+  if (todayISO < seasonStart) return false;
+  const [y, m, d] = todayISO.split("-").map(Number) as [number, number, number];
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  if (dow < 1 || dow > 5) return false;
+  return !activeDays.has(previousWorkday(todayISO)) && !activeDays.has(todayISO);
+}
