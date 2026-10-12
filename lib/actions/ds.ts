@@ -69,3 +69,33 @@ export async function setDsResourceStatusAction(id: string, status: "pending" | 
   if (error) throw new Error(error.message);
   revalidatePath("/ruta");
 }
+
+export async function logHoursAction(lane: Lane, delta: number) {
+  if (!["A", "B", "C"].includes(lane) || !Number.isFinite(delta) || Math.abs(delta) > 8) return;
+  const db = await authed();
+  const day = today();
+  const cur = await db.from("ds_hours_log").select("actual_h").eq("lane", lane).eq("day", day).maybeSingle();
+  const next = Math.max(0, Number((cur.data as { actual_h: number } | null)?.actual_h ?? 0) + delta);
+  const { error } = await db
+    .from("ds_hours_log")
+    .upsert({ lane, day, actual_h: next }, { onConflict: "user_id,lane,day" });
+  if (error) throw new Error(error.message);
+  revalidatePath("/nucleo");
+  revalidatePath("/carriles");
+}
+
+export async function logHabitAction(habit: "english" | "sql", on: boolean) {
+  const db = await authed();
+  const day = today();
+  if (on) {
+    const { error } = await db
+      .from("ds_habit_log")
+      .upsert({ habit, day, minutes: habit === "english" ? 25 : 30 }, { onConflict: "user_id,habit,day" });
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await db.from("ds_habit_log").delete().eq("habit", habit).eq("day", day);
+    if (error) throw new Error(error.message);
+  }
+  revalidatePath("/habitos");
+  revalidatePath("/nucleo");
+}

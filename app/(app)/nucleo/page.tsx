@@ -1,7 +1,8 @@
 import { getNucleoData } from "@/lib/data/ds-nucleo";
-import { LANE_COLOR, LANE_NAME, LANE_TARGET_H, greetingFor, type Lane } from "@/lib/domain/ds";
+import { greetingFor } from "@/lib/domain/ds";
 import { Orb } from "@/components/nucleo/Orb";
 import { Results } from "@/components/nucleo/Results";
+import { HoursButtons } from "@/components/nucleo/HoursButtons";
 import { CommandBar } from "@/components/nucleo/CommandBar";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,6 @@ export default async function NucleoPage() {
   const d = await getNucleoData();
   const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", hour12: false }).format(new Date()));
   const orbLabel = d.week ? `Semana ${d.week.number}` : d.daysToStart ? `Faltan ${d.daysToStart} d` : "Temporada";
-  const lanes: Lane[] = ["A", "B", "C"];
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,14 +56,9 @@ export default async function NucleoPage() {
 
         <div className="flex flex-col items-center justify-center gap-4">
           <Orb hours={d.hours} label={orbLabel} />
-          <ul className="flex flex-wrap justify-center gap-4 font-mono text-xs text-text-muted">
-            {lanes.map((l) => (
-              <li key={l} className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: LANE_COLOR[l] }} />
-                {l} {LANE_NAME[l]} · {d.hours[l]}/{LANE_TARGET_H[l]} h
-              </li>
-            ))}
-          </ul>
+          <div className="w-full max-w-sm">
+            <HoursButtons hours={d.hours} />
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">
