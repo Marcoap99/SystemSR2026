@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createDsClient } from "@/lib/supabase/ds";
 import { today } from "@/lib/domain/dates";
 import { currentDsWeek, type DsWeek } from "@/lib/domain/ds";
+import { AprenderTabs } from "@/components/nucleo/AprenderTabs";
 import { ResourceCheck } from "@/components/nucleo/ResourceCheck";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export default async function RutaPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="flex flex-col gap-4">
+      <AprenderTabs active="/ruta" />
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-text">Ruta de la semana</h1>
         <nav aria-label="Semanas" className="flex flex-wrap gap-1">

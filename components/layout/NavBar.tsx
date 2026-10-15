@@ -11,9 +11,7 @@ const LINKS = [
   { href: "/carriles", label: "Carriles", accent: null },
   { href: "/domingo", label: "Domingo", accent: null },
   { href: "/", label: "Panel", accent: null },
-  { href: "/ruta", label: "Ruta", accent: "aprender" },
-  { href: "/habitos", label: "Inglés/SQL", accent: "aprender" },
-  { href: "/aprender", label: "Archivo", accent: "aprender" },
+  { href: "/ruta", label: "Aprender", accent: "aprender", also: ["/habitos", "/aprender", "/backlog"] },
   { href: "/notas", label: "Notas", accent: "aprender" },
   { href: "/enlaces", label: "Enlaces", accent: "aprender" },
   { href: "/conectar", label: "Conectar", accent: "conectar" },
@@ -48,7 +46,10 @@ export function NavBar() {
         <div className="flex h-14 items-center justify-between gap-6">
           <nav className="flex items-center gap-1">
             {LINKS.map((link) => {
-              const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+              const active =
+                link.href === "/"
+                  ? pathname === "/"
+                  : [link.href, ...(("also" in link && link.also) || [])].some((h) => pathname.startsWith(h));
               const activeClass = link.accent ? ACCENT_CLASS[link.accent] : "bg-brand/10 text-brand-dark";
               return (
                 <Link

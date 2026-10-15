@@ -1,5 +1,6 @@
 import { createDsClient } from "@/lib/supabase/ds";
 import { addDays, today } from "@/lib/domain/dates";
+import { AprenderTabs } from "@/components/nucleo/AprenderTabs";
 import { HabitToggle } from "@/components/nucleo/HabitToggle";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function HabitosPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <AprenderTabs active="/habitos" />
       <header>
         <h1 className="text-2xl font-semibold text-text">Inglés y SQL</h1>
         <p className="text-sm text-text-muted">Inglés para entrevista 25 min a diario. SQL 30 min mar/jue/vie. Regla: nunca dos días en cero.</p>

@@ -25,6 +25,8 @@ Marco dio GO total: no volver a preguntar; decidir con criterio. Login Google = 
 - Núcleo: aviso "ayer en cero" (`zeroDayAlert`, con tests), cuenta regresiva al 19/10 y racha Duolingo (`streaks.kind=daily_english`). 109 tests verdes.
 - Advisors de seguridad de Supabase (12/10): solo INFO por las 15 `archive_*` con RLS sin políticas (intencional: respaldo inaccesible por API) y WARN de contraseñas filtradas (se vuelve irrelevante al desactivar el login por contraseña).
 
+- Aprender unificado: pestañas (`AprenderTabs`) Ruta de la semana (`/ruta`), Inglés y SQL (`/habitos`), Archivo UX Research (`/aprender` viejo, intacto) y Backlog (`/backlog`: AR3/4/5/8, AR7.x, AT1-4; AM1-3 "por decidir"). NavBar: un solo link "Aprender". Maqueta estática temporal en `public/preview.html` (excluida del proxy): BORRAR antes de producción junto con `design/preview.html` si ya no hace falta.
+
 ## Pendiente (orden)
 1. Línea base: `npm ci && npm run test && npm run lint && npm run build`.
 2. Cargar `docs/plan_estudio_resources.md` a `ds_resources` (tier: nucleo/utilitario; verificar 1 núcleo + 1 utilitario por tema; Skillshop = parcial). Rellenar `ds_study_themes.piece`.
