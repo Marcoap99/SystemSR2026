@@ -3,6 +3,7 @@
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { HudBackground } from "@/components/layout/HudBackground";
 
 function LoginForm() {
   const router = useRouter();
@@ -43,10 +44,13 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4">
-      <div className="w-full max-w-sm rounded-card border border-border bg-surface p-6 shadow-card">
-        <h1 className="text-xl font-semibold text-text">Plataforma de Desarrollo</h1>
-        <p className="mt-1 text-sm text-text-muted">Acceso privado.</p>
+    <main className="relative flex min-h-screen items-center justify-center bg-bg px-4">
+      <div className="fixed inset-0 -z-10" aria-hidden="true">
+        <HudBackground />
+      </div>
+      <div className="hud-panel w-full max-w-sm p-6">
+        <p className="hud-label">Acceso privado</p>
+        <h1 className="mt-1 text-xl font-semibold text-text">Daily System Marco</h1>
 
         {urlError ? (
           <p className="mt-4 text-sm text-warn">
@@ -57,7 +61,7 @@ function LoginForm() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="mt-6 w-full rounded-card bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
+          className="mt-6 min-h-11 w-full rounded-card bg-brand px-4 py-3 text-sm font-semibold text-bg transition-colors hover:bg-brand-dark"
         >
           Continuar con Google
         </button>
