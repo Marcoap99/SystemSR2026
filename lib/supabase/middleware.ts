@@ -68,11 +68,17 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && !isAllowedEmail(user.email)) {
+    // Correo no autorizado: cerrar sesión. signOut deja las cookies vacías en
+    // `response`; en /login y /auth/* se devuelve esa respuesta tal cual (si
+    // redirigiéramos a /login otra vez habría un lazo infinito).
     await supabase.auth.signOut();
+    if (path === "/login" || path.startsWith("/auth/")) return response;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "?error=denied";
-    return NextResponse.redirect(url);
+    const redirect = NextResponse.redirect(url);
+    for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+    return redirect;
   }
 
   if (user && path === "/login") {
