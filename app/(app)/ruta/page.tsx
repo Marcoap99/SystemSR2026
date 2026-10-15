@@ -59,7 +59,7 @@ export default async function RutaPage({ searchParams }: { searchParams: Promise
       {codes.map((code) => {
         const t = themes.get(code);
         return (
-          <section key={code} className="rounded-card border border-border bg-surface p-4">
+          <section key={code} className="hud-panel p-4">
             <h2 className="font-semibold text-text">
               {code} · {t?.title ?? ""}
             </h2>

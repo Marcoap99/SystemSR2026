@@ -27,6 +27,8 @@ Marco dio GO total: no volver a preguntar; decidir con criterio. Login Google = 
 
 - Aprender unificado: pestañas (`AprenderTabs`) Ruta de la semana (`/ruta`), Inglés y SQL (`/habitos`), Archivo UX Research (`/aprender` viejo, intacto) y Backlog (`/backlog`: AR3/4/5/8, AR7.x, AT1-4; AM1-3 "por decidir"). NavBar: un solo link "Aprender". Maqueta estática temporal en `public/preview.html` (excluida del proxy): BORRAR antes de producción junto con `design/preview.html` si ya no hace falta.
 
+- Sistema visual vivo (inspiración: HUDs Jarvis con Three.js: orbe de partículas con estados, anillos orbitales, grilla en perspectiva, boot sequence): `JarvisOrb3D` (Three.js, carga dinámica, respaldo SVG con reduced-motion o WebGL por software, pausa fuera de pantalla), estados idle/listening/processing/responding sincronizados con la barra Jarvis vía `lib/jarvis-events.ts`; `HudBackground` (grilla + estrellas + línea de escaneo) reemplaza el plasma rojo en tema oscuro; tokens oscuros alineados a Home1; `HudPanel`/`.hud-panel`; `BootSequence` (1 vez por sesión); barra inferior móvil (`MobileTabBar`). Verificado con captura headless (SwiftShader). No instalar `next dev` en CI de sesión: añade un bloque al CLAUDE.md (revertir).
+
 ## Pendiente (orden)
 1. Línea base: `npm ci && npm run test && npm run lint && npm run build`.
 2. Cargar `docs/plan_estudio_resources.md` a `ds_resources` (tier: nucleo/utilitario; verificar 1 núcleo + 1 utilitario por tema; Skillshop = parcial). Rellenar `ds_study_themes.piece`.

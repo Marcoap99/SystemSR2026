@@ -1,22 +1,13 @@
 import { getNucleoData } from "@/lib/data/ds-nucleo";
 import { greetingFor } from "@/lib/domain/ds";
-import { Orb } from "@/components/nucleo/Orb";
+import { OrbStage } from "@/components/nucleo/OrbStage";
+import { BootSequence } from "@/components/nucleo/BootSequence";
+import { HudPanel } from "@/components/ui/HudPanel";
 import { Results } from "@/components/nucleo/Results";
 import { HoursButtons } from "@/components/nucleo/HoursButtons";
 import { CommandBar } from "@/components/nucleo/CommandBar";
 
 export const dynamic = "force-dynamic";
-
-function Panel({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`relative flex min-h-0 flex-col gap-3 rounded-card border border-brand/15 bg-surface/90 p-4 ${className}`}>
-      <span className="pointer-events-none absolute -left-px -top-px h-3.5 w-3.5 rounded-tl-card border-l-2 border-t-2 border-brand" />
-      <span className="pointer-events-none absolute -bottom-px -right-px h-3.5 w-3.5 rounded-br-card border-b-2 border-r-2 border-brand" />
-      <h2 className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">{label}</h2>
-      {children}
-    </section>
-  );
-}
 
 export default async function NucleoPage() {
   const d = await getNucleoData();
@@ -25,6 +16,7 @@ export default async function NucleoPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <BootSequence />
       <header>
         <p className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">{d.todayISO}</p>
         <h1 className="text-2xl font-semibold text-text">{greetingFor(hour)}, Marco</h1>
@@ -42,10 +34,10 @@ export default async function NucleoPage() {
 
       <div className="grid gap-4 lg:grid-cols-[310px_1fr_310px]">
         <div className="flex flex-col gap-4">
-          <Panel label="Resultados de hoy">
+          <HudPanel label="Resultados de hoy">
             <Results tasks={d.tasks} />
-          </Panel>
-          <Panel label="Hito activo">
+          </HudPanel>
+          <HudPanel label="Hito activo">
             {d.milestone ? (
               <>
                 <p className="font-semibold text-text">
@@ -61,18 +53,18 @@ export default async function NucleoPage() {
             ) : (
               <p className="text-sm text-text-muted">Sin hito pendiente.</p>
             )}
-          </Panel>
+          </HudPanel>
         </div>
 
         <div className="flex flex-col items-center justify-center gap-4">
-          <Orb hours={d.hours} label={orbLabel} />
+          <OrbStage hours={d.hours} label={orbLabel} />
           <div className="w-full max-w-sm">
             <HoursButtons hours={d.hours} />
           </div>
         </div>
 
         <div className="flex flex-col gap-4">
-          <Panel label="Rachas y Ruta B">
+          <HudPanel label="Rachas y Ruta B">
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="font-mono text-xs text-text-muted">Inglés hoy</dt>
@@ -91,13 +83,13 @@ export default async function NucleoPage() {
                 <dd className="text-text">{d.routeB}/5</dd>
               </div>
             </dl>
-          </Panel>
+          </HudPanel>
         </div>
       </div>
 
-      <Panel label="Jarvis">
+      <HudPanel label="Jarvis">
         <CommandBar tasks={d.tasks} hours={d.hours} />
-      </Panel>
+      </HudPanel>
     </div>
   );
 }

@@ -29,8 +29,8 @@ export default async function HabitosPage() {
         <HabitToggle habit="english" label="Inglés para entrevista" detail="25 min · hoy" on={has("english", t)} />
         <HabitToggle habit="sql" label={sqlDay ? "SQL: práctica corta" : "SQL (hoy no toca)"} detail="30 min · mar/jue/vie" on={has("sql", t)} />
       </div>
-      <section aria-label="Últimos 7 días" className="rounded-card border border-border bg-surface p-4">
-        <h2 className="mb-3 font-mono text-xs uppercase tracking-[.14em] text-text-muted">Últimos 7 días</h2>
+      <section aria-label="Últimos 7 días" className="hud-panel p-4">
+        <h2 className="mb-3 hud-label">Últimos 7 días</h2>
         <div className="grid grid-cols-7 gap-2 text-center font-mono text-xs text-text-muted">
           {days.map((d) => {
             const dw = new Date(`${d}T00:00:00Z`).getUTCDay();

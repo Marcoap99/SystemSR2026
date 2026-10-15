@@ -14,7 +14,7 @@ type Counts = Map<string, { total: number; done: number }>;
 
 function Section({ title, note, rows, counts }: { title: string; note: string; rows: Row[]; counts: Counts }) {
   return (
-    <section className="rounded-card border border-border bg-surface p-4">
+    <section className="hud-panel p-4">
       <h2 className="font-semibold text-text">{title}</h2>
       <p className="text-sm text-text-muted">{note}</p>
       <ul className="mt-2 flex flex-col">

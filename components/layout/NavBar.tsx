@@ -44,7 +44,8 @@ export function NavBar() {
     <header className="border-b border-border bg-surface">
       <Container>
         <div className="flex h-14 items-center justify-between gap-6">
-          <nav className="flex items-center gap-1">
+          <span className="font-mono text-xs uppercase tracking-[.14em] text-text-muted md:hidden">Daily System</span>
+          <nav className="hidden items-center gap-1 md:flex">
             {LINKS.map((link) => {
               const active =
                 link.href === "/"

@@ -16,12 +16,12 @@ export default async function DomingoPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <p className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">Domingo 19:00 · semana del {d.monday}</p>
+        <p className="hud-label">Domingo 19:00 · semana del {d.monday}</p>
         <h1 className="text-2xl font-semibold text-text">Revisión semanal</h1>
       </header>
       <section aria-label="Números de la semana" className="grid grid-cols-2 gap-3 md:grid-cols-6">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-card border border-border bg-surface p-3">
+          <div key={s.label} className="hud-panel p-3">
             <p className="font-mono text-xs text-text-muted">{s.label}</p>
             <p className="text-lg font-semibold text-text">{s.value}</p>
           </div>

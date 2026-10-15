@@ -15,7 +15,7 @@ export default async function CarrilesPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <p className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">
+        <p className="hud-label">
           {d.week ? `Semana ${d.week.number}` : "Fuera de temporada"} · semana del {d.monday}
         </p>
         <h1 className="text-2xl font-semibold text-text">Carriles</h1>
@@ -24,7 +24,7 @@ export default async function CarrilesPage() {
         {lanes.map((l) => {
           const pct = Math.round(laneProgress(l, d.hours[l]) * 100);
           return (
-            <section key={l} className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4" style={{ borderTopColor: LANE_COLOR[l], borderTopWidth: 3 }}>
+            <section key={l} className="flex flex-col gap-3 hud-panel p-4" style={{ borderTopColor: LANE_COLOR[l], borderTopWidth: 3 }}>
               <h2 className="font-semibold text-text">
                 {l} · {LANE_NAME[l]}
               </h2>
@@ -44,7 +44,7 @@ export default async function CarrilesPage() {
                 {d.tasksDone[l]} hechas · {d.tasksPending[l]} pendientes
               </p>
               <div>
-                <p className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">Siguiente acción</p>
+                <p className="hud-label">Siguiente acción</p>
                 <p className="text-sm text-text">{d.nextAction[l] ?? "Sin tareas pendientes."}</p>
               </div>
             </section>

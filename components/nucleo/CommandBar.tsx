@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { minimumViableDayAction, toggleDsTaskAction } from "@/lib/actions/ds";
+import { emitJarvisState, type JarvisState } from "@/lib/jarvis-events";
 import { LANE_TARGET_H, dayResults, parseCommand, type DsTask, type Lane } from "@/lib/domain/ds";
 
 type State = "En espera" | "Escuchando" | "Procesando" | "Respondiendo";
@@ -23,6 +24,16 @@ export function CommandBar({ tasks, hours }: { tasks: DsTask[]; hours: Record<La
   const [text, setText] = useState("");
   const [, start] = useTransition();
   const rec = useRef<Recognition | null>(null);
+
+  useEffect(() => {
+    const map: Record<State, JarvisState> = {
+      "En espera": "idle",
+      Escuchando: "listening",
+      Procesando: "processing",
+      Respondiendo: "responding",
+    };
+    emitJarvisState(map[state]);
+  }, [state]);
 
   function run(input: string) {
     setState("Procesando");
