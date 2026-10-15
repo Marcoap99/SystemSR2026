@@ -53,9 +53,13 @@ export async function minimumViableDayAction() {
 }
 
 export async function saveReviewAction(week: number, answers: Record<string, string>, nextResults: string[]) {
+  if (!Number.isInteger(week) || week < 1 || week > 10) throw new Error("Semana inválida");
   const db = await authed();
-  const clean = Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, v.slice(0, 600)]));
-  const next = nextResults.map((s) => s.trim().slice(0, 140)).filter(Boolean).slice(0, 3);
+  // Solo las 3 preguntas conocidas: el cliente no puede meter claves arbitrarias en el jsonb.
+  const clean = Object.fromEntries(
+    (["ok", "stuck", "adjust"] as const).map((k) => [k, String(answers[k] ?? "").slice(0, 600)]),
+  );
+  const next = nextResults.map((s) => String(s).trim().slice(0, 140)).filter(Boolean).slice(0, 3);
   const { error } = await db
     .from("ds_reviews")
     .upsert({ week, answers: clean, next_results: next }, { onConflict: "user_id,week" });
