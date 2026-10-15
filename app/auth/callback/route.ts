@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/`);
     }
     // Correo no autorizado: no dejar sesión viva.
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     return NextResponse.redirect(`${origin}/login?error=denied`);
   }
 

@@ -5,8 +5,7 @@ import { today } from "@/lib/domain/dates";
 import { logAppEvent } from "@/lib/server/events";
 import { syncDuolingoStreak } from "@/lib/server/duolingo-sync";
 import { isAllowedEmail } from "@/lib/auth/allowed";
-
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+import { authGate, PUBLIC_PATHS } from "@/lib/auth/gate";
 
 /**
  * `app_open`/`section_view` viven acá, no dispersos en cada data loader,
@@ -39,7 +38,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers?: Record<string, string>) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
@@ -47,6 +46,8 @@ export async function updateSession(request: NextRequest) {
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
+          // Versiones nuevas de @supabase/ssr pasan cabeceras anti-caché junto a las cookies.
+          if (headers) for (const [k, v] of Object.entries(headers)) response.headers.set(k, v);
         },
       },
     },
@@ -61,31 +62,34 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublicPath = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
-  if (!user && !isPublicPath) {
+  // Toda redirección conserva las cookies (y cabeceras anti-caché) que getUser()
+  // o signOut() acaban de escribir en `response`: si se pierden, el refresh token
+  // rotado no llega al navegador y la sesión se cae en el siguiente request.
+  const redirectTo = (pathname: string, search = "") => {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  if (user && !isAllowedEmail(user.email)) {
-    // Correo no autorizado: cerrar sesión. signOut deja las cookies vacías en
-    // `response`; en /login y /auth/* se devuelve esa respuesta tal cual (si
-    // redirigiéramos a /login otra vez habría un lazo infinito).
-    await supabase.auth.signOut();
-    if (path === "/login" || path.startsWith("/auth/")) return response;
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "?error=denied";
+    url.pathname = pathname;
+    url.search = search;
     const redirect = NextResponse.redirect(url);
     for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+    for (const h of ["cache-control", "expires", "pragma"]) {
+      const v = response.headers.get(h);
+      if (v) redirect.headers.set(h, v);
+    }
     return redirect;
-  }
+  };
 
-  if (user && path === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+  const gate = authGate({ hasUser: !!user, allowed: isAllowedEmail(user?.email), path });
+  if (gate === "to-login") return redirectTo("/login");
+  if (gate === "to-home") return redirectTo("/");
+  if (gate === "denied-redirect") {
+    await supabase.auth.signOut({ scope: "local" });
+    return redirectTo("/login", "?error=denied");
   }
+  if (gate === "denied-continue") {
+    await supabase.auth.signOut({ scope: "local" });
+    return response;
+  }
+  // "callback-continue": el route handler de /auth/callback decide y cierra sesión.
 
   if (user && !isPublicPath) {
     const isPrefetch =
