@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GradientWave } from "@/components/ui/gradient-wave";
-import { ShaderBackground as PlasmaBackground } from "@/components/ui/light-blue-plasma-shader-w-grain-interactive";
+import { HudBackground } from "@/components/layout/HudBackground";
 
 function readTheme(): "light" | "dark" {
   if (typeof document === "undefined") return "dark";
@@ -60,7 +60,7 @@ export function ThemeShaderBackground() {
       {theme === "light" ? (
         <GradientWave className="h-full w-full" />
       ) : (
-        <PlasmaBackground className="h-full w-full" />
+        <HudBackground />
       )}
     </div>
   );
