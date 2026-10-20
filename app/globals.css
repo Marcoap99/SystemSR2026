@@ -65,12 +65,12 @@
   --t-brand-dark: #00b369;
   --t-brand-glow: rgba(0, 203, 117, 0.25);
   --t-secondary: #9b6bff;
-  --t-bg: #0b0f14;
-  --t-surface: #141a22;
-  --t-surface-2: #1b2430;
-  --t-border: #243040;
-  --t-text: #e8edf4;
-  --t-text-muted: #8a97a8;
+  --t-bg: #070b0a;
+  --t-surface: #0f1713;
+  --t-surface-2: #16201b;
+  --t-border: #1d3a2c;
+  --t-text: #e8eeea;
+  --t-text-muted: #8fa098;
   --t-warn: #ffb020;
   --t-locked: #3a4655;
   --t-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -335,5 +335,80 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .bn-notes-editor .bn-file-loading-preview {
     animation: none !important;
+  }
+}
+
+/* =========================================================
+   Daily System: sistema HUD (Home1/Home3). Paneles con esquinas de
+   corchete, etiquetas mono, resplandor suave. Solo en tema oscuro.
+   ========================================================= */
+.hud-panel {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 16%, transparent);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 94%, transparent), color-mix(in srgb, var(--color-bg) 94%, transparent));
+  backdrop-filter: blur(6px);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.hud-panel:hover {
+  border-color: color-mix(in srgb, var(--color-brand) 38%, transparent);
+  box-shadow: 0 0 24px -8px var(--color-brand-glow);
+}
+.hud-panel::before,
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.hud-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--color-brand);
+  border-left: 2px solid var(--color-brand);
+  border-top-left-radius: var(--radius-card);
+}
+.hud-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--color-brand);
+  border-right: 2px solid var(--color-brand);
+  border-bottom-right-radius: var(--radius-card);
+}
+.hud-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+@keyframes hud-grid-scroll {
+  to {
+    background-position: 0 56px;
+  }
+}
+@keyframes hud-scan {
+  0% {
+    transform: translateY(-10%);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+@keyframes boot-line {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

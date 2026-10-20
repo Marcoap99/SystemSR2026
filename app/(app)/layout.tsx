@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NavBar } from "@/components/layout/NavBar";
 import { Container } from "@/components/layout/Container";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { ThemeShaderBackground } from "@/components/layout/ThemeShaderBackground";
 
 /**
@@ -32,11 +33,12 @@ export default async function AppLayout({
     <div className="min-h-screen">
       <ThemeShaderBackground />
       <NavBar />
-      <main className="py-6">
+      <main className="py-6 pb-24 md:pb-6">
         <Container>
           <PageTransition>{children}</PageTransition>
         </Container>
       </main>
+      <MobileTabBar />
     </div>
   );
 }

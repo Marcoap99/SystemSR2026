@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily System Preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#070B0A;--surface:#0f1713;--surface2:#16201b;--border:rgba(0,203,117,.16);--line:rgba(255,255,255,.08);
+  --text:#E8EEEA;--muted:#8FA098;--soft:#B9C6BF;--brand:#00cb75;--warn:#ffb020;
+  --a:#9b6bff;--b:#00cb75;--c:#4da6ff;--aprender:#4da6ff;
+  --bgfx:radial-gradient(900px 500px at 80% -8%,rgba(0,203,117,.11),transparent 62%),radial-gradient(800px 480px at 4% 20%,rgba(155,107,255,.09),transparent 60%);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F4F7F5;--surface:#ffffff;--surface2:#eaf0ec;--border:rgba(0,150,86,.28);--line:rgba(0,0,0,.1);
+    --text:#14201a;--muted:#55645c;--soft:#3a4a42;--brand:#007a45;--warn:#9a5b00;
+    --a:#6d3fe0;--b:#007a45;--c:#1f6fbf;--aprender:#1f6fbf;--bgfx:none;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F4F7F5;--surface:#ffffff;--surface2:#eaf0ec;--border:rgba(0,150,86,.28);--line:rgba(0,0,0,.1);
+  --text:#14201a;--muted:#55645c;--soft:#3a4a42;--brand:#007a45;--warn:#9a5b00;
+  --a:#6d3fe0;--b:#007a45;--c:#1f6fbf;--aprender:#1f6fbf;--bgfx:none;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);background-image:var(--bgfx);background-attachment:fixed;color:var(--text);font:400 14px/1.45 Inter,system-ui,sans-serif;padding:0 16px 96px}
+.wrap{max-width:1100px;margin:0 auto}
+h1,h2,p,ul{margin:0}ul{padding:0;list-style:none}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.lbl{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0 10px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.badge{font-size:12px;border:1px solid var(--warn);color:var(--warn);border-radius:99px;padding:3px 10px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;padding:12px 0;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:none;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);font:500 14px Inter,sans-serif;cursor:pointer}
+nav.tabs button[aria-selected=true]{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);border-color:var(--border)}
+nav.tabs button:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.screen{display:none;flex-direction:column;gap:16px}.screen.on{display:flex}
+.hud{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.hud::before{content:"";position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:2px solid var(--brand);border-left:2px solid var(--brand);border-top-left-radius:8px}
+.hud::after{content:"";position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-bottom:2px solid var(--brand);border-right:2px solid var(--brand);border-bottom-right-radius:8px}
+h1{font-size:24px;font-weight:600}h2.t{font-size:16px;font-weight:600}
+.grid3{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:900px){.grid3{grid-template-columns:310px 1fr 310px}.grid3c{grid-template-columns:repeat(3,1fr)!important}}
+.grid3c{display:grid;gap:16px;grid-template-columns:1fr}
+.res{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:2px 10px 2px 8px}
+.res .n{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.chk{width:44px;height:44px;flex:none;display:grid;place-items:center;background:none;border:0;cursor:pointer;padding:0}
+.chk i{width:24px;height:24px;border-radius:6px;border:2px solid var(--c);display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:700;color:var(--bg)}
+.res.done span.tx{color:var(--muted);text-decoration:line-through}
+.res.done .chk i{background:var(--c)}
+.lane-A .chk i{border-color:var(--a)}.lane-A.done .chk i{background:var(--a)}
+.lane-B .chk i{border-color:var(--b)}.lane-B.done .chk i{background:var(--b)}
+.orbbox{display:flex;flex-direction:column;align-items:center;gap:14px;justify-content:center}
+.orb{width:100%;max-width:300px;height:auto}
+.ring-track{fill:none;stroke-width:10}.ring{fill:none;stroke-width:10;stroke-linecap:round}
+.hrow{display:flex;align-items:center;gap:8px;width:100%;max-width:360px;font-size:14px}
+.hrow .sw{width:8px;height:8px;border-radius:50%}
+.hrow b{font-weight:500;flex:1}
+.hrow button{min-height:44px;min-width:44px;border:1px solid var(--line);background:transparent;border-radius:8px;color:var(--text);font:500 12px 'JetBrains Mono',monospace;cursor:pointer;padding:0 10px}
+dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}dt{font:12px 'JetBrains Mono',monospace;color:var(--muted)}dd{margin:0}
+.cmd{display:flex;gap:8px}
+.cmd input{flex:1;min-width:0;min-height:44px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;color:var(--text);padding:0 12px;font:14px 'JetBrains Mono',monospace}
+.cmd button{min-height:44px;min-width:44px;border:1px solid var(--border);background:var(--brand);color:var(--bg);font-weight:600;border-radius:8px;padding:0 14px;cursor:pointer}
+.reply{font:12px 'JetBrains Mono',monospace;color:var(--muted)}
+.banner{border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);background:color-mix(in srgb,var(--brand) 10%,transparent);border-radius:8px;padding:10px 14px}
+.bar{height:6px;border-radius:99px;background:var(--surface2);overflow:hidden}.bar i{display:block;height:100%;border-radius:99px}
+.lane{border-top-width:3px}
+.rrow{display:flex;align-items:center;gap:4px;border-top:1px solid var(--line)}.rrow:first-of-type{border-top:0}
+.rrow .meta{flex:1;padding:8px 0;min-width:0}.rrow .meta p:first-child{overflow-wrap:anywhere}
+.open{min-height:44px;display:grid;place-items:center;padding:0 12px;border:1px solid var(--line);border-radius:8px;color:var(--aprender);text-decoration:none;font-size:14px}
+.weeks{display:flex;gap:4px;overflow-x:auto}.weeks button{flex:none;min-width:44px;min-height:44px;border-radius:8px;border:0;background:transparent;color:var(--muted);font:14px 'JetBrains Mono',monospace;cursor:pointer}
+.weeks button[aria-current=true]{background:color-mix(in srgb,var(--aprender) 16%,transparent);color:var(--aprender)}
+textarea{width:100%;min-height:72px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;color:var(--text);padding:10px;font:14px Inter,sans-serif}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:700px){.stats{grid-template-columns:repeat(6,1fr)}}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface)}.stat b{font-size:18px;font-weight:600}
+.note{color:var(--muted);font-size:12px;padding-top:8px}
+@media (prefers-reduced-motion:reduce){.dot,.spin{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><span class="dot"></span>Daily System Marco</div>
+  <span class="badge">Maqueta · datos de ejemplo</span>
+</header>
+<nav class="tabs" role="tablist" aria-label="Pantallas">
+  <button role="tab" aria-selected="true" data-s="nucleo">Núcleo</button>
+  <button role="tab" aria-selected="false" data-s="carriles">Carriles</button>
+  <button role="tab" aria-selected="false" data-s="ruta">Ruta</button>
+  <button role="tab" aria-selected="false" data-s="habitos">Inglés/SQL</button>
+  <button role="tab" aria-selected="false" data-s="domingo">Domingo</button>
+</nav>
+
+<!-- NÚCLEO -->
+<section class="screen on" id="nucleo">
+  <div><p class="lbl">Lunes 19 de octubre · Semana 1</p><h1>Buenos días, Marco</h1></div>
+  <div class="grid3">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="hud"><span class="lbl">Resultados de hoy</span>
+        <ul id="results" style="display:flex;flex-direction:column;gap:8px"></ul>
+      </div>
+      <div class="hud"><span class="lbl">Hito activo</span>
+        <p><b>1. Sistema andando</b></p><p class="mono" style="font-size:12px;color:var(--muted)">Fecha: 2026-11-08</p>
+        <ul style="list-style:disc;padding-left:20px;color:var(--soft);font-size:14px"><li>3 revisiones de domingo hechas</li><li>15 acciones en Ruta B (5 por semana)</li><li>Diagnóstico de ventas entregado al papá</li><li>Racha de inglés sin dos días en cero</li></ul>
+      </div>
+    </div>
+    <div class="orbbox">
+      <svg class="orb" viewBox="0 0 320 320" role="img" id="orbsvg" aria-label="Orbe de horas por carril">
+        <circle cx="160" cy="160" r="150" fill="none" stroke="var(--line)" stroke-dasharray="2 8" class="spin" style="transform-origin:160px 160px;animation:spin 80s linear infinite"/>
+        <g transform="rotate(-90 160 160)" id="rings"></g>
+        <text x="160" y="152" text-anchor="middle" class="mono" font-size="12" letter-spacing="2" style="fill:var(--muted)">SEMANA 1</text>
+        <text x="160" y="184" text-anchor="middle" class="mono" font-size="30" font-weight="600" style="fill:var(--text)" id="total">0 h</text>
+      </svg>
+      <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:2px" id="hours"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="hud"><span class="lbl">Rachas y Ruta B</span>
+        <dl><div><dt>Inglés hoy</dt><dd>Pendiente</dd></div><div><dt>Inglés semana</dt><dd>0/5</dd></div><div><dt>Duolingo</dt><dd>1 día (récord 20)</dd></div><div><dt>Ruta B</dt><dd>0/5</dd></div></dl>
+      </div>
+      <div class="banner">Faltan <b>0</b> días para el arranque: ¡la temporada empieza hoy!</div>
+    </div>
+  </div>
+  <div class="hud"><span class="lbl">Jarvis</span>
+    <form class="cmd" id="cmdform"><input id="cmd" aria-label="Comando" placeholder="qué tengo hoy · marca el 01 · cuántas horas llevo"><button type="submit">Enviar</button></form>
+    <p class="reply" aria-live="polite" id="reply">EN ESPERA · Prueba: "marca el 01" o "cuántas horas llevo".</p>
+  </div>
+</section>
+
+<!-- CARRILES -->
+<section class="screen" id="carriles">
+  <div><p class="lbl">Semana 1 · semana del 2026-10-19</p><h1>Carriles</h1></div>
+  <div class="grid3c" id="lanes"></div>
+</section>
+
+<!-- RUTA -->
+<section class="screen" id="ruta">
+  <h1>Ruta de la semana</h1>
+  <nav class="weeks" aria-label="Semanas" id="weeks"></nav>
+  <div id="rutabody" style="display:flex;flex-direction:column;gap:16px"></div>
+</section>
+
+<!-- HABITOS -->
+<section class="screen" id="habitos">
+  <div><h1>Inglés y SQL</h1><p style="color:var(--muted)">Inglés para entrevista 25 min a diario. SQL 30 min mar/jue/vie. Regla: nunca dos días en cero.</p></div>
+  <div class="grid3c" style="gap:12px" id="habtoggles"></div>
+  <div class="hud"><span class="lbl">Últimos 7 días</span><div id="week7" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center"></div><p class="note">Barra superior: inglés · barra inferior: SQL.</p></div>
+</section>
+
+<!-- DOMINGO -->
+<section class="screen" id="domingo">
+  <div><p class="lbl">Domingo 19:00 · semana del 2026-10-19</p><h1>Revisión semanal</h1></div>
+  <div class="stats" id="dstats"></div>
+  <div class="hud" style="gap:14px">
+    <label>Qué salió bien<textarea></textarea></label>
+    <label>Qué me trabó<textarea></textarea></label>
+    <label>Un ajuste para la próxima semana<textarea></textarea></label>
+    <div style="display:flex;flex-direction:column;gap:8px"><span>3 resultados de la próxima semana</span>
+      <input aria-label="Resultado 1" class="mono" style="min-height:44px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;color:var(--text);padding:0 12px">
+      <input aria-label="Resultado 2" class="mono" style="min-height:44px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;color:var(--text);padding:0 12px">
+      <input aria-label="Resultado 3" class="mono" style="min-height:44px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;color:var(--text);padding:0 12px"></div>
+    <button class="cmd" style="all:unset"><span style="display:inline-block;min-height:44px;line-height:44px;background:var(--brand);color:var(--bg);border-radius:8px;padding:0 16px;font-weight:600">Guardar revisión</span></button>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+  var LANES={A:{name:'Empleo',target:8,color:'var(--a)',r:130},B:{name:'Ingreso puente',target:10,color:'var(--b)',r:104},C:{name:'Estudio',target:9.5,color:'var(--c)',r:78}};
+  var hours={A:0,B:0,C:0};
+  var results=[{id:1,lane:'A',t:'Postular a 3 vacantes PM/PO Jr',done:false},{id:2,lane:'B',t:'Diagnóstico de ventas del papá: primer borrador',done:false},{id:3,lane:'C',t:'T1: ver "Claves de Product Discovery"',done:false}];
+  var $=function(i){return document.getElementById(i)};
+  function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
+
+  // tabs
+  var tabs=document.querySelectorAll('nav.tabs button');
+  tabs.forEach(function(b){b.addEventListener('click',function(){
+    tabs.forEach(function(x){x.setAttribute('aria-selected',x===b?'true':'false')});
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===b.dataset.s)});
+  })});
+
+  // núcleo
+  function renderResults(){
+    var ul=$('results');ul.innerHTML='';
+    results.forEach(function(r,i){
+      var li=el('li','res lane-'+r.lane+(r.done?' done':''));
+      li.innerHTML='<span class="n">0'+(i+1)+'</span><button class="chk" aria-pressed="'+r.done+'" aria-label="Marcar 0'+(i+1)+': '+r.t+'"><i>'+(r.done?'✓':'')+'</i></button><span class="tx">'+r.t+'</span>';
+      li.querySelector('button').addEventListener('click',function(){r.done=!r.done;renderResults()});
+      ul.appendChild(li);
+    });
+  }
+  function renderOrb(){
+    var g=$('rings');g.innerHTML='';var tot=0;
+    Object.keys(LANES).forEach(function(k){
+      var L=LANES[k],c=2*Math.PI*L.r,p=Math.min(1,hours[k]/L.target);tot+=hours[k];
+      g.insertAdjacentHTML('beforeend','<circle class="ring-track" cx="160" cy="160" r="'+L.r+'" stroke="'+L.color+'" stroke-opacity=".2"/><circle class="ring" cx="160" cy="160" r="'+L.r+'" stroke="'+L.color+'" stroke-dasharray="'+(c*p)+' '+c+'"/>');
+    });
+    $('total').textContent=(Math.round(tot*10)/10)+' h';
+    var H=$('hours');H.innerHTML='';
+    Object.keys(LANES).forEach(function(k){
+      var L=LANES[k],row=el('div','hrow');
+      row.innerHTML='<span class="sw" style="background:'+L.color+'"></span><b>'+k+' '+L.name+' · <span class="mono">'+hours[k]+'/'+L.target+' h</span></b><button aria-label="Restar media hora a '+k+'">−</button><button aria-label="Sumar media hora a '+k+'">+0.5 h</button>';
+      var bs=row.querySelectorAll('button');
+      bs[0].addEventListener('click',function(){hours[k]=Math.max(0,hours[k]-.5);renderAll()});
+      bs[1].addEventListener('click',function(){hours[k]+=.5;renderAll()});
+      H.appendChild(row);
+    });
+  }
+  $('cmdform').addEventListener('submit',function(e){
+    e.preventDefault();
+    var t=$('cmd').value.toLowerCase().normalize('NFD').replace(/[̀-ͯ¿?¡!.,]/g,'').trim(),r=$('reply');
+    var m=t.match(/^marca(?:r)? (?:el )?0?([1-3])$/);
+    if(/^(que tengo hoy|hoy)$/.test(t)) r.textContent='RESPONDIENDO · '+results.map(function(x,i){return '0'+(i+1)+' '+x.t}).join(' · ');
+    else if(m){var x=results[+m[1]-1];x.done=!x.done;renderResults();r.textContent='RESPONDIENDO · Listo: 0'+m[1]+(x.done?' marcado.':' reabierto.')}
+    else if(/horas llevo/.test(t)) r.textContent='RESPONDIENDO · A: '+hours.A+'/8 · B: '+hours.B+'/10 · C: '+hours.C+'/9.5 h';
+    else if(/minimo viable/.test(t)) r.textContent='RESPONDIENDO · Día mínimo viable registrado. Hoy cuenta.';
+    else r.textContent='EN ESPERA · No entendí. Prueba: qué tengo hoy, marca el 01.';
+    $('cmd').value='';
+  });
+
+  // carriles
+  var DESC={A:'Empleo por referido: PM/PO Jr (secundarios: BA de producto, Product Growth).',B:'Ingreso puente: mype del papá, Pensio y colegios; reporte de viernes.',C:'Estudio general: ruta de 10 semanas, SQL e inglés.'};
+  var NEXT={A:'Postular a 3 vacantes PM/PO Jr',B:'Diagnóstico de ventas: primer borrador',C:'T1: ver "Claves de Product Discovery"'};
+  function renderLanes(){
+    var box=$('lanes');box.innerHTML='';
+    Object.keys(LANES).forEach(function(k){
+      var L=LANES[k],pct=Math.round(Math.min(1,hours[k]/L.target)*100);
+      var card=el('section','hud lane',
+        '<h2 class="t">'+k+' · '+L.name+'</h2><p style="color:var(--muted)">'+DESC[k]+'</p><div><div class="mono" style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>'+hours[k]+' / '+L.target+' h</span><span>'+pct+'%</span></div><div class="bar" role="progressbar" aria-valuenow="'+pct+'" aria-label="Horas del carril '+k+'"><i style="width:'+pct+'%;background:'+L.color+'"></i></div></div><p class="mono" style="font-size:12px;color:var(--muted)">0 hechas · 1 pendiente</p><div><p class="lbl">Siguiente acción</p><p>'+NEXT[k]+'</p></div>');
+      card.style.borderTop='3px solid '+L.color;
+      box.appendChild(card);
+    });
+  }
+
+  // ruta
+  var R={
+    1:[['T1','Criterio PM: discovery, ICE, árbol de oportunidades',[['Las Claves para hacer Product Discovery (Nacho Bassino)','NÚCLEO','video · es · 69 min'],['Masterclass: Introducción a Product Discovery (Soy Startup Latam)','UTILITARIO','video · es · 129 min'],['[Resumen] Continuous Discovery Habits (Karen Delgado)','UTILITARIO','video · es · 19 min'],['ICE Score: el método para priorizar (Juan Merodio)','UTILITARIO','video · es · 5 min'],['Método RICE (Mauricio Martinez)','UTILITARIO','video · es · 4 min']],'1 página con un árbol de oportunidades (1 resultado, 3 oportunidades, 2 soluciones c/u) y una tabla ICE de 8 ideas con tu ranking.']],
+    3:[['T2','Historias de usuario, backlog y Scrum',[['Cómo Aplicar SCRUM en 2 Horas (marco calle)','NÚCLEO','video · es · 113 min'],['Scrum: Historias de Usuario, Épicas y Backlog (Alan Valencia Burgos)','UTILITARIO','video · es · 25 min']],'10 historias de usuario con criterios de aceptación, backlog con MoSCoW y un primer sprint de 2 semanas.']],
+    5:[['T4','Métricas: North Star, guardrails, KPIs',[['North Star Metric: Guía Completa 2026 (Ecosistema Startup)','NÚCLEO','web · es · 15 min'],['La historia secreta detrás del éxito de Yape (Gestión)','UTILITARIO','video · es · 6 min'],['What is a north star metric? (Metabase)','UTILITARIO','web · en · 8 min']],'Árbol de métricas: 1 North Star, 3 a 4 métricas de entrada, 2 guardrails con umbral.']]
+  };
+  var cur=1;
+  function renderRuta(){
+    var W=$('weeks');W.innerHTML='';
+    for(var w=1;w<=10;w++){(function(w){var b=el('button','', 'S'+w);if(w===cur)b.setAttribute('aria-current','true');b.addEventListener('click',function(){cur=w;renderRuta()});W.appendChild(b)})(w)}
+    var body=$('rutabody');body.innerHTML='';
+    var d=R[cur];
+    if(!d){body.appendChild(el('p','', 'Muestra solo S1, S3 y S5 en esta maqueta. En la app están las 10 semanas con los 66 recursos.'));return}
+    d.forEach(function(t){
+      var s=el('section','hud');s.appendChild(el('h2','t',t[0]+' · '+t[1]));
+      var ul=el('ul');
+      t[2].forEach(function(r,i){
+        var li=el('li','rrow');li.innerHTML='<button class="chk" aria-pressed="false" aria-label="Marcar como hecho: '+r[0]+'"><i style="border-color:var(--aprender)"></i></button><div class="meta"><p>'+r[0]+'</p><p class="mono" style="font-size:12px;color:var(--muted)">'+r[1]+' · '+r[2]+'</p></div><a class="open" href="#" onclick="return false">Abrir</a>';
+        var b=li.querySelector('button'),ic=b.querySelector('i');b.addEventListener('click',function(){var on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);ic.textContent=on?'✓':'';ic.style.background=on?'var(--aprender)':'transparent'});
+        ul.appendChild(li);
+      });
+      s.appendChild(ul);s.appendChild(el('p','', '<span class="lbl">Pieza · </span><span style="color:var(--muted)">'+t[3]+'</span>'));
+      body.appendChild(s);
+    });
+  }
+
+  // hábitos
+  function renderHabitos(){
+    var T=$('habtoggles');T.innerHTML='';
+    [['Inglés para entrevista','25 min · hoy'],['SQL (hoy no toca)','30 min · mar/jue/vie']].forEach(function(h){
+      var b=el('button','hud','<span style="display:flex;align-items:center;gap:12px;text-align:left"><span class="chkbox" style="width:24px;height:24px;border:2px solid var(--muted);border-radius:6px;display:grid;place-items:center"></span><span><span style="display:block;color:var(--text)">'+h[0]+'</span><span class="mono" style="font-size:12px;color:var(--muted)">'+h[1]+'</span></span></span>');
+      b.style.cssText='min-height:56px;cursor:pointer;color:inherit;font:inherit;text-align:left';
+      b.setAttribute('aria-pressed','false');
+      b.addEventListener('click',function(){var on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);var c=b.querySelector('.chkbox');c.textContent=on?'✓':'';c.style.background=on?'var(--brand)':'transparent';c.style.color='var(--bg)';c.style.borderColor=on?'var(--brand)':'var(--muted)'});
+      T.appendChild(b);
+    });
+    var D=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],w=$('week7');w.innerHTML='';
+    D.forEach(function(d){w.insertAdjacentHTML('beforeend','<div class="mono" style="font-size:12px;color:var(--muted)">'+d+'<div style="margin-top:4px;height:24px;border-radius:6px;background:var(--surface2)"></div><div style="margin-top:4px;height:12px;border-radius:6px;background:var(--surface2)"></div></div>')});
+  }
+  function renderDomingo(){
+    var S=[['Horas A','0/8'],['Horas B','0/10'],['Horas C','0/9.5'],['Inglés','0/5 días'],['SQL','0/3 días'],['Ruta B','0/5']];
+    $('dstats').innerHTML=S.map(function(s){return '<div class="stat"><p class="mono" style="font-size:12px;color:var(--muted)">'+s[0]+'</p><b>'+s[1]+'</b></div>'}).join('');
+  }
+  function renderAll(){renderOrb();renderLanes()}
+  renderResults();renderAll();renderRuta();renderHabitos();renderDomingo();
+})();
+</script>
+</body>
+</html>

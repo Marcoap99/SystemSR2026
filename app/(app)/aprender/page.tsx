@@ -1,4 +1,5 @@
 import { LibraryBrowser } from "@/components/learn/LibraryBrowser";
+import { AprenderTabs } from "@/components/nucleo/AprenderTabs";
 import { getLearnItemsData } from "@/lib/data/learn-items";
 
 export const dynamic = "force-dynamic";
@@ -7,5 +8,10 @@ export const dynamic = "force-dynamic";
 export default async function AprenderPage() {
   const data = await getLearnItemsData();
 
-  return <LibraryBrowser data={data} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <AprenderTabs active="/aprender" />
+      <LibraryBrowser data={data} />
+    </div>
+  );
 }
