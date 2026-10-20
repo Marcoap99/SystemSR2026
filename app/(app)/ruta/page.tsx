@@ -4,6 +4,8 @@ import { today } from "@/lib/domain/dates";
 import { currentDsWeek, type DsWeek } from "@/lib/domain/ds";
 import { AprenderTabs } from "@/components/nucleo/AprenderTabs";
 import { ResourceCheck } from "@/components/nucleo/ResourceCheck";
+import { DsResourceNotes } from "@/components/nucleo/DsResourceNotes";
+import type { NoteDocument } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,10 @@ interface Res {
   duration_min: number | null;
   tier: "nucleo" | "utilitario" | "archivo";
   verified: string | null;
-  status: string;
+  status: "pending" | "in_progress" | "done";
+  notes: NoteDocument | null;
+  notes_word_count: number;
+  has_notes: boolean;
 }
 
 export default async function RutaPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -66,6 +71,12 @@ export default async function RutaPage({ searchParams }: { searchParams: Promise
             <ul className="mt-2 flex flex-col">
               {rows
                 .filter((r) => r.theme_code === code)
+                // Primero lo que tiene notas o está en curso; después backlog
+                // (pendiente sin notas) -- dentro de cada grupo, sort_order.
+                .sort((a, b) => {
+                  const weight = (r: Res) => (r.has_notes || r.status === "in_progress" ? 0 : 1);
+                  return weight(a) - weight(b) || a.sort_order - b.sort_order;
+                })
                 .map((r) => (
                   <li key={r.id} className="flex items-center gap-2 border-t border-border first:border-t-0">
                     <ResourceCheck id={r.id} title={r.title} done={r.status === "done"} />
@@ -76,6 +87,20 @@ export default async function RutaPage({ searchParams }: { searchParams: Promise
                         {r.verified === "parcial" ? " · requiere login" : ""}
                       </p>
                     </div>
+                    <DsResourceNotes
+                      resource={{
+                        id: r.id,
+                        title: r.title,
+                        url: r.url,
+                        tier: r.tier,
+                        format: r.format,
+                        language: r.language,
+                        week: r.week,
+                        notes: r.notes,
+                        status: r.status,
+                        notes_word_count: r.notes_word_count,
+                      }}
+                    />
                     {r.url ? (
                       <a href={r.url} target="_blank" rel="noopener noreferrer" className="grid min-h-11 place-items-center rounded-card border border-border px-3 text-sm text-dim-aprender hover:border-dim-aprender">
                         Abrir

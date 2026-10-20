@@ -7,7 +7,26 @@ import { saveResourceNotesAction, uploadNoteImageAction } from "@/lib/actions/no
 import { updateResourceStatusAction } from "@/lib/actions/resources";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 import { EMPTY_NOTE_TEMPLATE } from "@/components/notes/note-template";
-import type { ItemStatus, Resource } from "@/lib/types";
+import type { ItemStatus, NoteDocument } from "@/lib/types";
+
+/**
+ * Forma mínima que necesita el modal -- deliberadamente más chica que
+ * `Resource` para que también acepten `ds_resources` (brief realineación,
+ * bloque 1) sin tener learn_code ni las mismas uniones estrictas de
+ * tier/format/language.
+ */
+export interface NotesModalItem {
+  id: string;
+  title: string;
+  url: string | null;
+  learn_code?: string | null;
+  tier?: string | null;
+  format?: string | null;
+  language?: string | null;
+  week?: number | null;
+  notes: NoteDocument | null;
+  status: ItemStatus;
+}
 
 const STATUS_CYCLE: ItemStatus[] = ["pending", "in_progress", "done"];
 const STATUS_LABEL: Record<ItemStatus, string> = {
@@ -38,7 +57,7 @@ const LANGUAGE_LABEL: Record<string, string> = { es: "ES", en: "EN" };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-function initialBlocksFor(resource: Resource): PartialBlock[] {
+function initialBlocksFor(resource: NotesModalItem): PartialBlock[] {
   if (resource.notes === null) return EMPTY_NOTE_TEMPLATE;
   if (resource.notes.length === 0) return [{ type: "paragraph" }];
   return resource.notes as unknown as PartialBlock[];
@@ -55,10 +74,17 @@ export function NotesModal({
   resource,
   locked,
   onClose,
+  saveNotes = saveResourceNotesAction,
+  uploadImage = uploadNoteImageAction,
+  onStatusChange = updateResourceStatusAction,
 }: {
-  resource: Resource;
+  resource: NotesModalItem;
   locked: boolean;
   onClose: () => void;
+  /** Default: notas de `resources`. `/ruta` pasa la versión `ds_resources`. */
+  saveNotes?: (id: string, doc: NoteDocument) => Promise<unknown>;
+  uploadImage?: (id: string, formData: FormData) => Promise<{ url: string } | { error: string }>;
+  onStatusChange?: (id: string, status: ItemStatus) => Promise<unknown>;
 }) {
   const [closing, setClosing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -103,7 +129,7 @@ export function NotesModal({
     if (doc === null) return true;
     setSaveStatus("saving");
     try {
-      await saveResourceNotesAction(resource.id, doc as never);
+      await saveNotes(resource.id, doc as never);
       pendingDocRef.current = null;
       setSaveStatus("saved");
       setSavedAt(Date.now());
@@ -114,7 +140,7 @@ export function NotesModal({
       setSaveStatus("error");
       return false;
     }
-  }, [resource.id]);
+  }, [resource.id, saveNotes]);
 
   const handleChangeDoc = useCallback(
     (doc: Block[]) => {
@@ -176,7 +202,7 @@ export function NotesModal({
     const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(status) + 1) % STATUS_CYCLE.length]!;
     setStatus(next);
     setStatusPending(true);
-    updateResourceStatusAction(resource.id, next).finally(() => setStatusPending(false));
+    onStatusChange(resource.id, next).finally(() => setStatusPending(false));
   }
 
   // Portal a document.body: PageTransition anima el contenido de la página
@@ -210,7 +236,7 @@ export function NotesModal({
               {[
                 resource.learn_code,
                 resource.tier ? TIER_LABEL[resource.tier] : null,
-                FORMAT_LABEL[resource.format],
+                resource.format ? FORMAT_LABEL[resource.format] : null,
                 resource.language ? LANGUAGE_LABEL[resource.language] : null,
                 resource.week ? `sem ${resource.week}` : null,
               ]
@@ -267,7 +293,7 @@ export function NotesModal({
             uploadImage={async (file) => {
               const formData = new FormData();
               formData.append("file", file);
-              const result = await uploadNoteImageAction(resource.id, formData);
+              const result = await uploadImage(resource.id, formData);
               if ("error" in result) throw new Error(result.error);
               return result.url;
             }}

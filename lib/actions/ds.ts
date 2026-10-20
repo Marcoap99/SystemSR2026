@@ -4,6 +4,17 @@ import { revalidatePath } from "next/cache";
 import { createDsClient } from "@/lib/supabase/ds";
 import { today } from "@/lib/domain/dates";
 import type { Lane } from "@/lib/domain/ds";
+import { noteDocumentToPlainText, noteWordCount } from "@/lib/domain/notes";
+import type { NoteDocument } from "@/lib/types";
+
+export interface DsResourceSearchResult {
+  id: string;
+  theme_code: string;
+  week: number | null;
+  title: string;
+  url: string | null;
+  notes_plain: string | null;
+}
 
 async function authed() {
   const db = await createDsClient();
@@ -65,6 +76,37 @@ export async function saveReviewAction(week: number, answers: Record<string, str
     .upsert({ week, answers: clean, next_results: next }, { onConflict: "user_id,week" });
   if (error) throw new Error(error.message);
   revalidatePath("/domingo");
+}
+
+/** Bloque 1 realineación — paridad con saveResourceNotesAction, sobre ds_resources. */
+export async function saveDsResourceNotesAction(id: string, doc: NoteDocument) {
+  const db = await authed();
+  const { error } = await db
+    .from("ds_resources")
+    .update({
+      notes: doc as never,
+      notes_plain: noteDocumentToPlainText(doc) || null,
+      notes_word_count: noteWordCount(doc),
+      notes_updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/ruta");
+  revalidatePath("/notas");
+}
+
+export async function searchDsNotesAction(query: string): Promise<DsResourceSearchResult[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const db = await authed();
+  const { data, error } = await db
+    .from("ds_resources")
+    .select("id,theme_code,week,title,url,notes_plain")
+    .eq("has_notes", true)
+    .textSearch("notes_plain", q, { type: "plain", config: "spanish" })
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as DsResourceSearchResult[];
 }
 
 export async function setDsResourceStatusAction(id: string, status: "pending" | "in_progress" | "done") {
