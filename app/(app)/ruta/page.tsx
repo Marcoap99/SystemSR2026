@@ -5,6 +5,7 @@ import { currentDsWeek, type DsWeek } from "@/lib/domain/ds";
 import { AprenderTabs } from "@/components/nucleo/AprenderTabs";
 import { ResourceCheck } from "@/components/nucleo/ResourceCheck";
 import { DsResourceNotes } from "@/components/nucleo/DsResourceNotes";
+import { ResourceTags } from "@/components/nucleo/ResourceTags";
 import type { NoteDocument } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -30,10 +31,11 @@ interface Res {
 export default async function RutaPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
   const { s } = await searchParams;
   const db = await createDsClient();
-  const [weeksQ, themesQ, resQ] = await Promise.all([
+  const [weeksQ, themesQ, resQ, tagsQ] = await Promise.all([
     db.from("ds_weeks").select("number,starts_on,ends_on").order("number"),
     db.from("ds_study_themes").select("code,title,piece"),
     db.from("ds_resources").select("*").order("sort_order"),
+    db.from("ds_note_tags").select("resource_id,tag"),
   ]);
   const weeks = (weeksQ.data ?? []) as DsWeek[];
   const cur = currentDsWeek(today(), weeks)?.number ?? 1;
@@ -41,6 +43,10 @@ export default async function RutaPage({ searchParams }: { searchParams: Promise
   const themes = new Map(((themesQ.data ?? []) as { code: string; title: string; piece: string | null }[]).map((t) => [t.code, t]));
   const rows = ((resQ.data ?? []) as Res[]).filter((r) => r.week === n && r.theme_code !== "SQL" && r.theme_code !== "ING");
   const codes = [...new Set(rows.map((r) => r.theme_code))];
+  const tagsByResource = new Map<string, string[]>();
+  for (const t of (tagsQ.data ?? []) as { resource_id: string; tag: string }[]) {
+    tagsByResource.set(t.resource_id, [...(tagsByResource.get(t.resource_id) ?? []), t.tag]);
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -86,6 +92,9 @@ export default async function RutaPage({ searchParams }: { searchParams: Promise
                         {r.tier === "nucleo" ? "NÚCLEO" : "UTILITARIO"} · {r.format} · {r.language} · {r.duration_min} min
                         {r.verified === "parcial" ? " · requiere login" : ""}
                       </p>
+                      <div className="mt-1">
+                        <ResourceTags resourceId={r.id} tags={tagsByResource.get(r.id) ?? []} />
+                      </div>
                     </div>
                     <DsResourceNotes
                       resource={{

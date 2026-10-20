@@ -109,6 +109,26 @@ export async function searchDsNotesAction(query: string): Promise<DsResourceSear
   return (data ?? []) as DsResourceSearchResult[];
 }
 
+/** Realineación 20/10 (sección 1) — etiquetas por tema sobre un recurso. */
+export async function addDsNoteTagAction(resourceId: string, tag: string) {
+  const clean = tag.trim().toLowerCase().slice(0, 40);
+  if (!clean) return;
+  const db = await authed();
+  const { error } = await db.from("ds_note_tags").upsert(
+    { resource_id: resourceId, tag: clean },
+    { onConflict: "user_id,resource_id,tag" },
+  );
+  if (error) throw new Error(error.message);
+  revalidatePath("/ruta");
+}
+
+export async function removeDsNoteTagAction(resourceId: string, tag: string) {
+  const db = await authed();
+  const { error } = await db.from("ds_note_tags").delete().eq("resource_id", resourceId).eq("tag", tag);
+  if (error) throw new Error(error.message);
+  revalidatePath("/ruta");
+}
+
 export async function setDsResourceStatusAction(id: string, status: "pending" | "in_progress" | "done") {
   const db = await authed();
   const { error } = await db.from("ds_resources").update({ status }).eq("id", id);
