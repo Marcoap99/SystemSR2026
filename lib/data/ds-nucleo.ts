@@ -58,9 +58,9 @@ export async function getNucleoData(): Promise<NucleoData> {
   }
 
   const weekRows = (weeks.data ?? []) as DsWeek[];
-  const sums: Record<Lane, number> = { A: 0, B: 0, C: 0 };
+  const sums: Record<Lane, number> = { A: 0, B: 0, C: 0, D: 0 };
   for (const r of (hours.data ?? []) as { lane: string; actual_h: number }[]) {
-    if (r.lane === "A" || r.lane === "B" || r.lane === "C") sums[r.lane] += Number(r.actual_h);
+    if (r.lane === "A" || r.lane === "B" || r.lane === "C" || r.lane === "D") sums[r.lane] += Number(r.actual_h);
   }
   const habitRows = (habits.data ?? []) as { day: string; minutes: number }[];
   const m = (milestones.data ?? [])[0] as

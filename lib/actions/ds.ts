@@ -117,7 +117,7 @@ export async function setDsResourceStatusAction(id: string, status: "pending" | 
 }
 
 export async function logHoursAction(lane: Lane, delta: number) {
-  if (!["A", "B", "C"].includes(lane) || !Number.isFinite(delta) || Math.abs(delta) > 8) return;
+  if (!["A", "B", "C", "D"].includes(lane) || !Number.isFinite(delta) || Math.abs(delta) > 8) return;
   const db = await authed();
   const day = today();
   const cur = await db.from("ds_hours_log").select("actual_h").eq("lane", lane).eq("day", day).maybeSingle();

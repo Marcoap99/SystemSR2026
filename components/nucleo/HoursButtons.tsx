@@ -8,7 +8,7 @@ export function HoursButtons({ hours }: { hours: Record<Lane, number> }) {
   const [pending, start] = useTransition();
   return (
     <ul className="flex flex-col gap-2">
-      {(["A", "B", "C"] as Lane[]).map((l) => (
+      {(["A", "B", "C", "D"] as Lane[]).map((l) => (
         <li key={l} className="flex items-center gap-2 text-sm">
           <span className="h-2 w-2 rounded-full" style={{ background: LANE_COLOR[l] }} />
           <span className="flex-1 text-text">

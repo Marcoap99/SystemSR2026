@@ -4,21 +4,24 @@
  */
 import { addDays, diffDays, isWeekend } from "@/lib/domain/dates";
 
-export type Lane = "A" | "B" | "C";
+export type Lane = "A" | "B" | "C" | "D";
 
-/** Metas semanales de horas por carril (brief: A 8, B 10, C 9,5). */
-export const LANE_TARGET_H: Record<Lane, number> = { A: 8, B: 10, C: 9.5 };
+/** Metas semanales de horas por carril (brief: A 8, B 10, C 9,5; D 2,5 -- realineación 20/10). */
+export const LANE_TARGET_H: Record<Lane, number> = { A: 8, B: 10, C: 9.5, D: 2.5 };
 
 export const LANE_NAME: Record<Lane, string> = {
   A: "Empleo",
   B: "Ingreso puente",
   C: "Estudio",
+  D: "Contenido",
 };
 
+// D usa el cian de "exponer" (--color-dim-exponer, tema oscuro) -- no choca con A/B/C.
 export const LANE_COLOR: Record<Lane, string> = {
   A: "#9b6bff",
   B: "#00cb75",
   C: "#4da6ff",
+  D: "#22d3ee",
 };
 
 export interface DsWeek {

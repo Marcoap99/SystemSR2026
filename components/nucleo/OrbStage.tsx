@@ -15,7 +15,7 @@ const JarvisOrb3D = dynamic(() => import("@/components/nucleo/JarvisOrb3D").then
 export function OrbStage({ hours, label }: { hours: Record<Lane, number>; label: string }) {
   const [flat, setFlat] = useState(false);
   const total = Math.round((hours.A + hours.B + hours.C) * 10) / 10;
-  const summary = (["A", "B", "C"] as Lane[]).map((l) => `Carril ${l}: ${hours[l]} de ${LANE_TARGET_H[l]} horas`).join(". ");
+  const summary = (["A", "B", "C", "D"] as Lane[]).map((l) => `Carril ${l}: ${hours[l]} de ${LANE_TARGET_H[l]} horas`).join(". ");
 
   if (flat) return <Orb hours={hours} label={label} />;
   return (

@@ -13,10 +13,12 @@ const STATE_LOOK: Record<JarvisState, { speed: number; pulse: number; color: str
   responding: { speed: 1.5, pulse: 0.6, color: "#00cb75" },
 };
 
-const LANES: { lane: Lane; radius: number; tilt: number }[] = [
+const LANES: { lane: Lane; radius: number; tilt: number; thin?: boolean }[] = [
   { lane: "A", radius: 1.8, tilt: 1.15 },
   { lane: "B", radius: 2.05, tilt: 0.55 },
   { lane: "C", radius: 2.3, tilt: -0.35 },
+  // Carril D (realineación 20/10): anillo fino extra, afuera de C, no toca A/B/C.
+  { lane: "D", radius: 2.45, tilt: -0.75, thin: true },
 ];
 
 const VERT = /* glsl */ `
@@ -151,24 +153,27 @@ export function JarvisOrb3D({
     const wire = new THREE.Mesh(wireGeo, wireMat);
     root.add(wire);
 
-    // Anillos de carriles (pista + arco de avance)
-    const ringGroups = LANES.map(({ lane, radius, tilt }) => {
+    // Anillos de carriles (pista + arco de avance). Los "finos" (carril D)
+    // usan un tubo más delgado -- visualmente subordinados a A/B/C, que no cambian.
+    const ringGroups = LANES.map(({ lane, radius, tilt, thin }) => {
+      const trackTube = thin ? 0.004 : 0.008;
+      const arcTube = thin ? 0.01 : 0.022;
       const g = new THREE.Group();
       g.rotation.x = tilt;
-      const trackGeo = new THREE.TorusGeometry(radius, 0.008, 8, 200);
+      const trackGeo = new THREE.TorusGeometry(radius, trackTube, 8, 200);
       const trackMat = new THREE.MeshBasicMaterial({ color: LANE_COLOR[lane], transparent: true, opacity: 0.16 });
       g.add(new THREE.Mesh(trackGeo, trackMat));
       const arcMat = new THREE.MeshBasicMaterial({ color: LANE_COLOR[lane] });
-      const arc = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.022, 12, 200, 0.001), arcMat);
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(radius, arcTube, 12, 200, 0.001), arcMat);
       g.add(arc);
       root.add(g);
-      return { lane, radius, g, arc, trackGeo, trackMat, arcMat };
+      return { lane, radius, arcTube, g, arc, trackGeo, trackMat, arcMat };
     });
     ringsApi.current = (h) => {
       for (const r of ringGroups) {
         const p = Math.max(0.012, laneProgress(r.lane, h[r.lane]));
         r.arc.geometry.dispose();
-        r.arc.geometry = new THREE.TorusGeometry(r.radius, 0.022, 12, 200, p * Math.PI * 2);
+        r.arc.geometry = new THREE.TorusGeometry(r.radius, r.arcTube, 12, 200, p * Math.PI * 2);
       }
     };
     ringsApi.current(hours);

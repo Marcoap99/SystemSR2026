@@ -16,7 +16,8 @@ export interface WeekData {
   review: { answers: Record<string, string>; next_results: string[] } | null;
 }
 
-const zero = (): Record<Lane, number> => ({ A: 0, B: 0, C: 0 });
+const zero = (): Record<Lane, number> => ({ A: 0, B: 0, C: 0, D: 0 });
+const CONTENT_STAGE_ORDER = ["idea", "guion", "grabado", "editado", "programado", "publicado"] as const;
 
 export async function getWeekData(): Promise<WeekData> {
   const db = await createDsClient();
@@ -24,12 +25,14 @@ export async function getWeekData(): Promise<WeekData> {
   const monday = mondayOf(todayISO);
   const friday = addDays(monday, 4);
 
-  const [weeks, hours, tasks, habits, routeB] = await Promise.all([
+  const [weeks, hours, tasks, habits, routeB, content] = await Promise.all([
     db.from("ds_weeks").select("number,starts_on,ends_on").order("number"),
     db.from("ds_hours_log").select("lane,actual_h").gte("day", monday).lte("day", friday),
     db.from("ds_tasks").select("lane,title,status,day,created_at").order("created_at"),
     db.from("ds_habit_log").select("habit,minutes").gte("day", monday).lte("day", friday),
     db.from("ds_routeb_actions").select("id", { count: "exact", head: true }).gte("day", monday).lte("day", friday),
+    // Carril D (realineación): estado/siguiente acción vienen de ds_content_pieces, no de ds_tasks.
+    db.from("ds_content_pieces").select("tema,estado,fecha_objetivo,created_at").order("created_at"),
   ]);
 
   const week = currentDsWeek(todayISO, (weeks.data ?? []) as DsWeek[]);
@@ -38,7 +41,7 @@ export async function getWeekData(): Promise<WeekData> {
 
   const done = zero();
   const pending = zero();
-  const next: Record<Lane, string | null> = { A: null, B: null, C: null };
+  const next: Record<Lane, string | null> = { A: null, B: null, C: null, D: null };
   for (const t of (tasks.data ?? []) as { lane: Lane; title: string; status: string; day: string | null }[]) {
     if (!(t.lane in done)) continue;
     if (t.status === "done") {
@@ -48,6 +51,25 @@ export async function getWeekData(): Promise<WeekData> {
       next[t.lane] ??= t.title;
     }
   }
+
+  const contentRows = (content.data ?? []) as {
+    tema: string;
+    estado: (typeof CONTENT_STAGE_ORDER)[number];
+    fecha_objetivo: string | null;
+    created_at: string;
+  }[];
+  done.D = contentRows.filter(
+    (p) => p.estado === "publicado" && p.fecha_objetivo && p.fecha_objetivo >= monday && p.fecha_objetivo <= friday,
+  ).length;
+  pending.D = contentRows.filter((p) => p.estado !== "publicado").length;
+  next.D =
+    contentRows
+      .filter((p) => p.estado !== "publicado")
+      .sort(
+        (a, b) =>
+          CONTENT_STAGE_ORDER.indexOf(a.estado) - CONTENT_STAGE_ORDER.indexOf(b.estado) ||
+          a.created_at.localeCompare(b.created_at),
+      )[0]?.tema ?? null;
 
   const habitRows = (habits.data ?? []) as { habit: string; minutes: number }[];
   let review: WeekData["review"] = null;

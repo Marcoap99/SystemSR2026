@@ -1,9 +1,11 @@
 import { LANE_COLOR, LANE_TARGET_H, laneProgress, type Lane } from "@/lib/domain/ds";
 
-const RINGS: { lane: Lane; r: number }[] = [
-  { lane: "A", r: 130 },
-  { lane: "B", r: 104 },
-  { lane: "C", r: 78 },
+const RINGS: { lane: Lane; r: number; width: number }[] = [
+  { lane: "A", r: 130, width: 10 },
+  { lane: "B", r: 104, width: 10 },
+  { lane: "C", r: 78, width: 10 },
+  // Carril D (realineación 20/10): anillo fino extra, afuera de A/B/C, sin tocarlos.
+  { lane: "D", r: 142, width: 4 },
 ];
 
 /** Orbe de 3 anillos: horas de la semana por carril contra su meta. */
@@ -14,13 +16,13 @@ export function Orb({ hours, label }: { hours: Record<Lane, number>; label: stri
   return (
     <svg viewBox="0 0 320 320" role="img" aria-label={`${label}. ${summary}`} className="mx-auto h-auto w-full max-w-[320px]">
       <circle cx="160" cy="160" r="150" fill="none" stroke="rgba(255,255,255,.12)" strokeDasharray="2 8" className="motion-safe:animate-[spin_80s_linear_infinite]" style={{ transformOrigin: "160px 160px" }} />
-      {RINGS.map(({ lane, r }) => {
+      {RINGS.map(({ lane, r, width }) => {
         const c = 2 * Math.PI * r;
         const p = laneProgress(lane, hours[lane]);
         return (
           <g key={lane} transform="rotate(-90 160 160)">
-            <circle cx="160" cy="160" r={r} fill="none" stroke={LANE_COLOR[lane]} strokeOpacity=".18" strokeWidth="10" />
-            <circle cx="160" cy="160" r={r} fill="none" stroke={LANE_COLOR[lane]} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${c * p} ${c}`} />
+            <circle cx="160" cy="160" r={r} fill="none" stroke={LANE_COLOR[lane]} strokeOpacity=".18" strokeWidth={width} />
+            <circle cx="160" cy="160" r={r} fill="none" stroke={LANE_COLOR[lane]} strokeWidth={width} strokeLinecap="round" strokeDasharray={`${c * p} ${c}`} />
           </g>
         );
       })}

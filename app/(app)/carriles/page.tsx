@@ -7,11 +7,12 @@ const LANE_DESC: Record<Lane, string> = {
   A: "Empleo por referido: PM/PO Jr (secundarios: BA de producto, Product Growth).",
   B: "Ingreso puente: mype del papá, Pensio y colegios; reporte de viernes.",
   C: "Estudio general: ruta de 10 semanas, SQL e inglés.",
+  D: "Contenido: video, carrusel o post. Se mide constancia, no vistas.",
 };
 
 export default async function CarrilesPage() {
   const d = await getWeekData();
-  const lanes: Lane[] = ["A", "B", "C"];
+  const lanes: Lane[] = ["A", "B", "C", "D"];
   return (
     <div className="flex flex-col gap-4">
       <header>
@@ -20,7 +21,7 @@ export default async function CarrilesPage() {
         </p>
         <h1 className="text-2xl font-semibold text-text">Carriles</h1>
       </header>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {lanes.map((l) => {
           const pct = Math.round(laneProgress(l, d.hours[l]) * 100);
           return (
