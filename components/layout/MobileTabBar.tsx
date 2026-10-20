@@ -14,6 +14,9 @@ const MAIN = [
 const MORE = [
   { href: "/notas", label: "Notas" },
   { href: "/enlaces", label: "Enlaces" },
+  { href: "/semana", label: "Semana" },
+  { href: "/red", label: "Red" },
+  { href: "/evidencia", label: "Evidencia" },
 ] as const;
 
 /** Barra inferior móvil: 4 destinos + "Más" (brief sección 7). Solo < md. */

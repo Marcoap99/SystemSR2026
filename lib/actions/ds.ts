@@ -130,6 +130,92 @@ export async function logHoursAction(lane: Lane, delta: number) {
   revalidatePath("/carriles");
 }
 
+export type DsConnectionStage = "nuevo" | "contactado" | "conversando" | "reunion" | "cerrado";
+const CONNECTION_STAGES: DsConnectionStage[] = ["nuevo", "contactado", "conversando", "reunion", "cerrado"];
+
+/** Bloque 5 realineación — Red. */
+export async function addDsConnectionAction(input: {
+  persona: string;
+  empresa?: string;
+  rol?: string;
+  canal?: string;
+}) {
+  const persona = input.persona.trim().slice(0, 140);
+  if (!persona) throw new Error("Falta el nombre");
+  const db = await authed();
+  const { error } = await db.from("ds_connections").insert({
+    persona,
+    empresa: input.empresa?.trim().slice(0, 140) || null,
+    rol: input.rol?.trim().slice(0, 140) || null,
+    canal: input.canal?.trim().slice(0, 80) || null,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/red");
+}
+
+export async function setDsConnectionStageAction(id: string, etapa: DsConnectionStage) {
+  if (!CONNECTION_STAGES.includes(etapa)) throw new Error("Etapa inválida");
+  const db = await authed();
+  const { error } = await db.from("ds_connections").update({ etapa }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/red");
+}
+
+export async function updateDsConnectionAction(
+  id: string,
+  patch: { ultimo_contacto?: string | null; proxima_accion?: string | null; nota?: string | null },
+) {
+  const db = await authed();
+  const clean: Record<string, string | null> = {};
+  if ("ultimo_contacto" in patch) clean.ultimo_contacto = patch.ultimo_contacto || null;
+  if ("proxima_accion" in patch) clean.proxima_accion = (patch.proxima_accion ?? "").trim().slice(0, 200) || null;
+  if ("nota" in patch) clean.nota = (patch.nota ?? "").trim().slice(0, 2000) || null;
+  const { error } = await db.from("ds_connections").update(clean).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/red");
+}
+
+/** Bloque 5 realineación — Evidencia. Mismo editor genérico de notas que ds_resources. */
+export async function addDsEvidencePieceAction(input: { title: string; kind: "caso_final" | "portafolio" }) {
+  const title = input.title.trim().slice(0, 140);
+  if (!title) throw new Error("Falta el título");
+  const db = await authed();
+  const { count } = await db.from("ds_evidence_pieces").select("id", { count: "exact", head: true });
+  const { error } = await db.from("ds_evidence_pieces").insert({ title, kind: input.kind, sort_order: count ?? 0 });
+  if (error) throw new Error(error.message);
+  revalidatePath("/evidencia");
+}
+
+export async function saveDsEvidenceNotesAction(id: string, doc: NoteDocument) {
+  const db = await authed();
+  const { error } = await db
+    .from("ds_evidence_pieces")
+    .update({
+      notes: doc as never,
+      notes_plain: noteDocumentToPlainText(doc) || null,
+      notes_word_count: noteWordCount(doc),
+      notes_updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/evidencia");
+}
+
+export async function setDsEvidenceStatusAction(id: string, status: "pending" | "in_progress" | "done") {
+  const db = await authed();
+  const { error } = await db.from("ds_evidence_pieces").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/evidencia");
+}
+
+export async function setDsEvidenceLinkAction(id: string, url: string) {
+  const db = await authed();
+  const clean = url.trim().slice(0, 500) || null;
+  const { error } = await db.from("ds_evidence_pieces").update({ url: clean }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/evidencia");
+}
+
 export async function logHabitAction(habit: "english" | "sql", on: boolean) {
   const db = await authed();
   const day = today();

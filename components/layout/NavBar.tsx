@@ -12,6 +12,9 @@ const LINKS = [
   { href: "/ruta", label: "Aprender", accent: "aprender", also: ["/habitos", "/aprender", "/backlog"] },
   { href: "/notas", label: "Notas", accent: "aprender" },
   { href: "/enlaces", label: "Enlaces", accent: "aprender" },
+  { href: "/semana", label: "Semana", accent: null },
+  { href: "/red", label: "Red", accent: "conectar" },
+  { href: "/evidencia", label: "Evidencia", accent: "exponer" },
   { href: "/domingo", label: "Domingo", accent: null },
 ] as const;
 
