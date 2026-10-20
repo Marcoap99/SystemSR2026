@@ -2,7 +2,7 @@
  * Daily System Marco: lógica pura (sin reloj ni base). Todas las funciones
  * reciben "hoy" como 'YYYY-MM-DD' (ver lib/domain/dates.ts).
  */
-import { addDays, diffDays } from "@/lib/domain/dates";
+import { addDays, diffDays, isWeekend } from "@/lib/domain/dates";
 
 export type Lane = "A" | "B" | "C";
 
@@ -116,6 +116,24 @@ export function previousWorkday(todayISO: string): string {
     d = addDays(d, -1);
   }
   return d;
+}
+
+/**
+ * Bloque 4 realineación — racha de hábito (solo inglés hoy), días hábiles
+ * consecutivos con actividad terminando en `todayISO`, saltando fin de
+ * semana (mismo criterio que daily_english en lib/domain/streaks.ts).
+ */
+export function englishHabitStreak(todayISO: string, activeDays: Set<string>): number {
+  let count = 0;
+  let d = todayISO;
+  for (let i = 0; i < 365; i++) {
+    if (!isWeekend(d)) {
+      if (!activeDays.has(d)) break;
+      count++;
+    }
+    d = addDays(d, -1);
+  }
+  return count;
 }
 
 /**

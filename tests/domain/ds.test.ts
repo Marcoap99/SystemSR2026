@@ -64,7 +64,21 @@ describe("comandos", () => {
   });
 });
 
-import { previousWorkday, zeroDayAlert } from "@/lib/domain/ds";
+import { englishHabitStreak, previousWorkday, zeroDayAlert } from "@/lib/domain/ds";
+
+describe("racha de inglés (bloque 4)", () => {
+  it("cuenta días hábiles consecutivos hasta hoy, saltando fin de semana", () => {
+    // mar 20 (hoy), lun 19, vie 16, jue 15 activos; miér 14 no.
+    const active = new Set(["2026-10-20", "2026-10-19", "2026-10-16", "2026-10-15"]);
+    expect(englishHabitStreak("2026-10-20", active)).toBe(4);
+  });
+  it("corta en el primer día hábil sin actividad", () => {
+    expect(englishHabitStreak("2026-10-20", new Set(["2026-10-19"]))).toBe(0);
+  });
+  it("sin actividad hoy, racha 0", () => {
+    expect(englishHabitStreak("2026-10-20", new Set())).toBe(0);
+  });
+});
 
 describe("regla de no dos días en cero", () => {
   it("el día laborable anterior salta el fin de semana", () => {

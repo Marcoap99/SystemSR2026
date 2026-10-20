@@ -2,6 +2,7 @@ import { getNucleoData } from "@/lib/data/ds-nucleo";
 import { greetingFor } from "@/lib/domain/ds";
 import { OrbStage } from "@/components/nucleo/OrbStage";
 import { BootSequence } from "@/components/nucleo/BootSequence";
+import { CounterStrip } from "@/components/nucleo/CounterStrip";
 import { HudPanel } from "@/components/ui/HudPanel";
 import { Results } from "@/components/nucleo/Results";
 import { HoursButtons } from "@/components/nucleo/HoursButtons";
@@ -31,6 +32,8 @@ export default async function NucleoPage() {
           Faltan {d.daysToStart} días para el arranque del 19 de octubre.
         </p>
       ) : null}
+
+      <CounterStrip data={d} />
 
       <div className="grid gap-4 lg:grid-cols-[310px_1fr_310px]">
         <div className="flex flex-col gap-4">
