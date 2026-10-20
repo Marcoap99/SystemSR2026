@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/semana", label: "Semana", accent: null },
   { href: "/red", label: "Red", accent: "conectar" },
   { href: "/evidencia", label: "Evidencia", accent: "exponer" },
+  { href: "/contenido", label: "Contenido", accent: null },
   { href: "/domingo", label: "Domingo", accent: null },
 ] as const;
 

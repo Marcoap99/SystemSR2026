@@ -17,6 +17,7 @@ const MORE = [
   { href: "/semana", label: "Semana" },
   { href: "/red", label: "Red" },
   { href: "/evidencia", label: "Evidencia" },
+  { href: "/contenido", label: "Contenido" },
 ] as const;
 
 /** Barra inferior móvil: 4 destinos + "Más" (brief sección 7). Solo < md. */

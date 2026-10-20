@@ -77,6 +77,7 @@ export function NotesModal({
   saveNotes = saveResourceNotesAction,
   uploadImage = uploadNoteImageAction,
   onStatusChange = updateResourceStatusAction,
+  showStatus = true,
 }: {
   resource: NotesModalItem;
   locked: boolean;
@@ -85,6 +86,8 @@ export function NotesModal({
   saveNotes?: (id: string, doc: NoteDocument) => Promise<unknown>;
   uploadImage?: (id: string, formData: FormData) => Promise<{ url: string } | { error: string }>;
   onStatusChange?: (id: string, status: ItemStatus) => Promise<unknown>;
+  /** Bloque 6 realineación -- Contenido tiene su propio tablero de 6 estados, no el pending/in_progress/done de acá. */
+  showStatus?: boolean;
 }) {
   const [closing, setClosing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -260,7 +263,7 @@ export function NotesModal({
               🔗 Abrir recurso
             </a>
           ) : null}
-          {!locked ? (
+          {showStatus && !locked ? (
             <button
               type="button"
               onClick={cycleStatus}
@@ -269,9 +272,9 @@ export function NotesModal({
             >
               {STATUS_LABEL[status]}
             </button>
-          ) : (
+          ) : showStatus ? (
             <span className="ml-auto shrink-0 text-xs text-locked">🔒 Bloqueado por dependencia</span>
-          )}
+          ) : null}
         </div>
 
         {uploadNotice ? (

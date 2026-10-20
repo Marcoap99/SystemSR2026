@@ -216,6 +216,52 @@ export async function setDsEvidenceLinkAction(id: string, url: string) {
   revalidatePath("/evidencia");
 }
 
+export type DsContentStage = "idea" | "guion" | "grabado" | "editado" | "programado" | "publicado";
+const CONTENT_STAGES: DsContentStage[] = ["idea", "guion", "grabado", "editado", "programado", "publicado"];
+
+/** Bloque 6 realineación — Contenido. */
+export async function addDsContentPieceAction(input: { tema: string; formato?: string; canales?: string[] }) {
+  const tema = input.tema.trim().slice(0, 140);
+  if (!tema) throw new Error("Falta el tema");
+  const db = await authed();
+  const { error } = await db.from("ds_content_pieces").insert({
+    tema,
+    formato: input.formato?.trim().slice(0, 60) || null,
+    canales: (input.canales ?? []).map((c) => c.trim()).filter(Boolean).slice(0, 10),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/contenido");
+}
+
+export async function setDsContentStageAction(id: string, estado: DsContentStage) {
+  if (!CONTENT_STAGES.includes(estado)) throw new Error("Estado inválido");
+  const db = await authed();
+  const { error } = await db.from("ds_content_pieces").update({ estado }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/contenido");
+}
+
+export async function saveDsContentNotesAction(id: string, doc: NoteDocument) {
+  const db = await authed();
+  const { error } = await db
+    .from("ds_content_pieces")
+    .update({
+      guion_notas: doc as never,
+      guion_notas_plain: noteDocumentToPlainText(doc) || null,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/contenido");
+}
+
+export async function setDsContentLinkAction(id: string, link: string) {
+  const db = await authed();
+  const clean = link.trim().slice(0, 500) || null;
+  const { error } = await db.from("ds_content_pieces").update({ link_publicado: clean }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/contenido");
+}
+
 export async function logHabitAction(habit: "english" | "sql", on: boolean) {
   const db = await authed();
   const day = today();
