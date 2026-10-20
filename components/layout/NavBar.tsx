@@ -9,15 +9,10 @@ import { ThemeToggle } from "./ThemeToggle";
 const LINKS = [
   { href: "/nucleo", label: "Núcleo", accent: null },
   { href: "/carriles", label: "Carriles", accent: null },
-  { href: "/domingo", label: "Domingo", accent: null },
-  { href: "/", label: "Panel", accent: null },
   { href: "/ruta", label: "Aprender", accent: "aprender", also: ["/habitos", "/aprender", "/backlog"] },
   { href: "/notas", label: "Notas", accent: "aprender" },
   { href: "/enlaces", label: "Enlaces", accent: "aprender" },
-  { href: "/conectar", label: "Conectar", accent: "conectar" },
-  { href: "/exponer", label: "Exponer", accent: "exponer" },
-  { href: "/log", label: "Log", accent: null },
-  { href: "/plan", label: "Plan", accent: null },
+  { href: "/domingo", label: "Domingo", accent: null },
 ] as const;
 
 // C.6: un acento de color por dimensión, consistente en toda la app.
@@ -47,10 +42,9 @@ export function NavBar() {
           <span className="font-mono text-xs uppercase tracking-[.14em] text-text-muted md:hidden">Daily System</span>
           <nav className="hidden items-center gap-1 md:flex">
             {LINKS.map((link) => {
-              const active =
-                link.href === "/"
-                  ? pathname === "/"
-                  : [link.href, ...(("also" in link && link.also) || [])].some((h) => pathname.startsWith(h));
+              const active = [link.href, ...(("also" in link && link.also) || [])].some((h) =>
+                pathname.startsWith(h),
+              );
               const activeClass = link.accent ? ACCENT_CLASS[link.accent] : "bg-brand/10 text-brand-dark";
               return (
                 <Link
