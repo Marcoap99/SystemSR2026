@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useMemo, useState, useTransition, type FormEvent } from "react";
 import { Card } from "@/components/ui/Card";
 import { NoteResultCard } from "@/components/notes/NoteResultCard";
+import { DsNoteResultCard } from "@/components/notes/DsNoteResultCard";
 import { searchNotesAction, type NoteSearchResult } from "@/lib/actions/notes";
 import type { NotesData } from "@/lib/data/notes";
+import type { DsNotesData } from "@/lib/data/ds-notes";
 import type { Resource } from "@/lib/types";
 
 type Tab = "semana" | "tema" | "busqueda";
@@ -36,7 +38,15 @@ function matchesOrigin(resource: Resource, origin: Origin): boolean {
  * siguen mostrando solo lo que ya tiene nota -- un enlace guardado sin
  * tocar vive en /enlaces, nunca acá (V1.4 sección 3).
  */
-export function NotesBrowser({ data, todayISO }: { data: NotesData; todayISO: string }) {
+export function NotesBrowser({
+  data,
+  dsData,
+  todayISO,
+}: {
+  data: NotesData;
+  dsData: DsNotesData;
+  todayISO: string;
+}) {
   const [tab, setTab] = useState<Tab>("semana");
   const [origin, setOrigin] = useState<Origin>("todo");
   const [query, setQuery] = useState("");
@@ -76,21 +86,17 @@ export function NotesBrowser({ data, todayISO }: { data: NotesData; todayISO: st
     });
   }
 
-  if (!data.hasAnyNotes) {
-    return (
-      <Card>
-        <p className="text-sm text-text-muted">
-          Todavía no hay notas. Empezá por un recurso de esta semana.
-        </p>
-        {/* LibraryBrowser ya arranca filtrado en "esta semana" cuando hay una activa -- no hace falta query param. */}
-        <Link href="/aprender" className="mt-2 inline-block text-sm text-brand hover:underline">
-          Ir a /aprender →
-        </Link>
-      </Card>
-    );
-  }
-
-  return (
+  const legacyContent = !data.hasAnyNotes ? (
+    <Card>
+      <p className="text-sm text-text-muted">
+        Todavía no hay notas. Empezá por un recurso de esta semana.
+      </p>
+      {/* LibraryBrowser ya arranca filtrado en "esta semana" cuando hay una activa -- no hace falta query param. */}
+      <Link href="/aprender" className="mt-2 inline-block text-sm text-brand hover:underline">
+        Ir a /aprender →
+      </Link>
+    </Card>
+  ) : (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1 rounded-card border border-border bg-surface p-1">
@@ -210,6 +216,37 @@ export function NotesBrowser({ data, todayISO }: { data: NotesData; todayISO: st
           ) : null}
         </Card>
       ) : null}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-text-muted">Notas de esta temporada</h2>
+          <Link href="/archivo" className="text-sm text-brand hover:underline">
+            Ver panel Temporada 1 →
+          </Link>
+        </div>
+        {!dsData.hasAnyNotes ? (
+          <Card className="mt-3">
+            <p className="text-sm text-text-muted">Todavía no hay notas en esta temporada.</p>
+          </Card>
+        ) : (
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {dsData.items.map((item) => (
+              <DsNoteResultCard key={item.id} item={item} todayISO={todayISO} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <details>
+        <summary className="cursor-pointer text-sm font-semibold text-text-muted select-none">
+          SR anteriores (Temporada 1)
+        </summary>
+        <div className="mt-3">{legacyContent}</div>
+      </details>
     </div>
   );
 }

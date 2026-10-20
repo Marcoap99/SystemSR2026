@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { NotesBrowser } from "@/components/notes/NotesBrowser";
 import { getNotesData } from "@/lib/data/notes";
+import { getDsNotesData } from "@/lib/data/ds-notes";
 import { today } from "@/lib/domain/dates";
 
 export const dynamic = "force-dynamic";
 
-/** V1.3 parche sección 7 — /notas. */
+/** V1.3 parche sección 7 — /notas. Bloque 2 realineación: + notas de ds_resources arriba. */
 export default async function NotasPage() {
-  const data = await getNotesData();
+  const [data, dsData] = await Promise.all([getNotesData(), getDsNotesData()]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,7 +25,7 @@ export default async function NotasPage() {
           + Guardar algo
         </Link>
       </div>
-      <NotesBrowser data={data} todayISO={today()} />
+      <NotesBrowser data={data} dsData={dsData} todayISO={today()} />
     </div>
   );
 }
