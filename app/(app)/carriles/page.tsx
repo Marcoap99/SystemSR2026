@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getWeekData } from "@/lib/data/ds-week";
+import { createDsClient } from "@/lib/supabase/ds";
 import { LANE_COLOR, LANE_NAME, LANE_TARGET_H, laneProgress, type Lane } from "@/lib/domain/ds";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +15,12 @@ const LANE_DESC: Record<Lane, string> = {
 // Realineación 21/10 — cada carril es un "proyecto": A/B tienen su propio
 // desglose en /carriles/[lane]; C ya vive en /ruta (Aprender) y D en /contenido.
 const LANE_HREF: Record<Lane, string> = { A: "/carriles/a", B: "/carriles/b", C: "/ruta", D: "/contenido" };
+const LANE_CTA: Record<Lane, string> = { A: "Ver desglose →", B: "Ver desglose →", C: "Ir a Aprender →", D: "Ver tablero →" };
 
 export default async function CarrilesPage() {
-  const d = await getWeekData();
+  const db = await createDsClient();
+  const [d, infoQ] = await Promise.all([getWeekData(), db.from("ds_lane_info").select("lane,weekly_goal")]);
+  const weeklyGoal = new Map(((infoQ.data ?? []) as { lane: Lane; weekly_goal: string | null }[]).map((r) => [r.lane, r.weekly_goal]));
   const lanes: Lane[] = ["A", "B", "C", "D"];
   return (
     <div className="flex flex-col gap-4">
@@ -40,6 +44,14 @@ export default async function CarrilesPage() {
                 {l} · {LANE_NAME[l]}
               </h2>
               <p className="text-sm text-text-muted">{LANE_DESC[l]}</p>
+              {weeklyGoal.get(l) ? (
+                <p className="font-mono text-xs text-text-muted">Meta: {weeklyGoal.get(l)}</p>
+              ) : null}
+              {l === "C" ? (
+                <p className="font-mono text-xs text-text-muted">
+                  Inglés {d.englishDays}/5 · SQL {d.sqlDays}/3
+                </p>
+              ) : null}
               <div>
                 <div className="flex justify-between font-mono text-xs text-text-muted">
                   <span>
@@ -59,7 +71,7 @@ export default async function CarrilesPage() {
                 <p className="text-sm text-text">{d.nextAction[l] ?? "Sin tareas pendientes."}</p>
               </div>
               <span className="mt-auto text-xs font-medium" style={{ color: LANE_COLOR[l] }}>
-                Ver desglose →
+                {LANE_CTA[l]}
               </span>
             </Link>
           );
