@@ -319,18 +319,30 @@ export async function setDsEvidenceLinkAction(id: string, url: string) {
 
 export type DsContentStage = "idea" | "guion" | "grabado" | "editado" | "programado" | "publicado";
 const CONTENT_STAGES: DsContentStage[] = ["idea", "guion", "grabado", "editado", "programado", "publicado"];
+export type ContentChannel = "reel" | "tiktok" | "carrusel_li";
+const CONTENT_CHANNELS: ContentChannel[] = ["reel", "tiktok", "carrusel_li"];
+export type ContentPilar = "producto" | "ecosistema" | "ia";
+const CONTENT_PILARES: ContentPilar[] = ["producto", "ecosistema", "ia"];
 
-/** Bloque 6 realineación — Contenido. */
-export async function addDsContentPieceAction(input: { tema: string; formato?: string; canales?: string[] }) {
+/** Realineación 21/10 — Contenido: una pieza crea una variante por canal elegido. */
+export async function addDsContentPieceAction(input: { tema: string; formato?: string; canales?: ContentChannel[]; pilar?: ContentPilar }) {
   const tema = input.tema.trim().slice(0, 140);
   if (!tema) throw new Error("Falta el tema");
+  const canales = (input.canales ?? []).filter((c) => CONTENT_CHANNELS.includes(c));
+  const pilar = input.pilar && CONTENT_PILARES.includes(input.pilar) ? input.pilar : null;
   const db = await authed();
-  const { error } = await db.from("ds_content_pieces").insert({
-    tema,
-    formato: input.formato?.trim().slice(0, 60) || null,
-    canales: (input.canales ?? []).map((c) => c.trim()).filter(Boolean).slice(0, 10),
-  });
+  const { data, error } = await db
+    .from("ds_content_pieces")
+    .insert({ tema, formato: input.formato?.trim().slice(0, 60) || null, canales, pilar })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  if (canales.length > 0) {
+    const { error: variantsError } = await db
+      .from("ds_content_variants")
+      .insert(canales.map((channel) => ({ piece_id: data.id, channel })));
+    if (variantsError) throw new Error(variantsError.message);
+  }
   revalidatePath("/contenido");
 }
 
@@ -338,6 +350,28 @@ export async function setDsContentStageAction(id: string, estado: DsContentStage
   if (!CONTENT_STAGES.includes(estado)) throw new Error("Estado inválido");
   const db = await authed();
   const { error } = await db.from("ds_content_pieces").update({ estado }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/contenido");
+}
+
+/** Variantes por canal: estado y fecha de publicación propios (sección 6 del mensaje). */
+export async function setDsContentVariantStageAction(variantId: string, estado: DsContentStage) {
+  if (!CONTENT_STAGES.includes(estado)) throw new Error("Estado inválido");
+  const db = await authed();
+  const patch: { estado: DsContentStage; published_at?: string } = { estado };
+  if (estado === "publicado") {
+    const { data } = await db.from("ds_content_variants").select("published_at").eq("id", variantId).maybeSingle();
+    if (!data?.published_at) patch.published_at = today();
+  }
+  const { error } = await db.from("ds_content_variants").update(patch).eq("id", variantId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/contenido");
+}
+
+export async function setDsContentVariantDateAction(variantId: string, date: string) {
+  const db = await authed();
+  const clean = date.trim() || null;
+  const { error } = await db.from("ds_content_variants").update({ published_at: clean }).eq("id", variantId);
   if (error) throw new Error(error.message);
   revalidatePath("/contenido");
 }

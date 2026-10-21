@@ -25,14 +25,16 @@ export async function getWeekData(): Promise<WeekData> {
   const monday = mondayOf(todayISO);
   const friday = addDays(monday, 4);
 
-  const [weeks, hours, tasks, habits, routeB, content] = await Promise.all([
+  const [weeks, hours, tasks, habits, routeB, content, contentVariants] = await Promise.all([
     db.from("ds_weeks").select("number,starts_on,ends_on").order("number"),
     db.from("ds_hours_log").select("lane,actual_h").gte("day", monday).lte("day", friday),
     db.from("ds_tasks").select("lane,title,status,day,created_at").order("created_at"),
     db.from("ds_habit_log").select("habit,minutes").gte("day", monday).lte("day", friday),
     db.from("ds_routeb_actions").select("id", { count: "exact", head: true }).gte("day", monday).lte("day", friday),
     // Carril D (realineación): estado/siguiente acción vienen de ds_content_pieces, no de ds_tasks.
-    db.from("ds_content_pieces").select("tema,estado,fecha_objetivo,created_at").order("created_at"),
+    db.from("ds_content_pieces").select("tema,estado,created_at").order("created_at"),
+    // El conteo de publicadas usa la fecha real de la variante, no fecha_objetivo.
+    db.from("ds_content_variants").select("piece_id,estado,published_at"),
   ]);
 
   const week = currentDsWeek(todayISO, (weeks.data ?? []) as DsWeek[]);
@@ -55,12 +57,14 @@ export async function getWeekData(): Promise<WeekData> {
   const contentRows = (content.data ?? []) as {
     tema: string;
     estado: (typeof CONTENT_STAGE_ORDER)[number];
-    fecha_objetivo: string | null;
     created_at: string;
   }[];
-  done.D = contentRows.filter(
-    (p) => p.estado === "publicado" && p.fecha_objetivo && p.fecha_objetivo >= monday && p.fecha_objetivo <= friday,
-  ).length;
+  const publishedPieceIds = new Set(
+    ((contentVariants.data ?? []) as { piece_id: string; estado: string; published_at: string | null }[])
+      .filter((v) => v.estado === "publicado" && v.published_at && v.published_at >= monday && v.published_at <= friday)
+      .map((v) => v.piece_id),
+  );
+  done.D = publishedPieceIds.size;
   pending.D = contentRows.filter((p) => p.estado !== "publicado").length;
   next.D =
     contentRows
