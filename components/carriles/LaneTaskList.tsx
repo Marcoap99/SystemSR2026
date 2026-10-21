@@ -51,8 +51,18 @@ function TaskRow({ task, lane }: { task: LaneTask; lane: Lane }) {
   );
 }
 
-/** Realineación 21/10 — checklist completo de un carril (A/B), tipo gestión de proyecto. */
-export function LaneTaskList({ lane, tasks }: { lane: Lane; tasks: LaneTask[] }) {
+/** Realineación 21/10 — checklist de un carril (A/B), agrupable por estrategia/etapa. */
+export function LaneTaskList({
+  lane,
+  tasks,
+  strategyCode,
+  placeholder = "Nueva acción para este carril",
+}: {
+  lane: Lane;
+  tasks: LaneTask[];
+  strategyCode?: string;
+  placeholder?: string;
+}) {
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +78,7 @@ export function LaneTaskList({ lane, tasks }: { lane: Lane; tasks: LaneTask[] })
     if (!title) return;
     startTransition(async () => {
       try {
-        await addLaneTaskAction(lane, title);
+        await addLaneTaskAction(lane, title, strategyCode);
         formRef.current?.reset();
       } catch (err) {
         setError(err instanceof Error ? err.message : "No se pudo agregar");
@@ -78,14 +88,14 @@ export function LaneTaskList({ lane, tasks }: { lane: Lane; tasks: LaneTask[] })
 
   return (
     <div className="flex flex-col gap-4">
-      <form ref={formRef} onSubmit={handleAdd} className="flex gap-2">
+      <form ref={formRef} onSubmit={handleAdd} className="flex flex-wrap gap-2">
         <input
           name="title"
           maxLength={140}
-          placeholder="Nueva acción para este carril"
-          className="min-h-11 min-w-0 flex-1 rounded-card border border-border bg-surface px-3 text-sm text-text outline-none focus:border-brand"
+          placeholder={placeholder}
+          className="min-h-11 min-w-[160px] flex-1 rounded-card border border-border bg-surface px-3 text-sm text-text outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand"
         />
-        <button type="submit" disabled={pending} className="min-h-11 rounded-card bg-brand px-4 text-sm font-semibold text-bg disabled:opacity-50">
+        <button type="submit" disabled={pending} className="min-h-11 shrink-0 rounded-card bg-brand px-4 text-sm font-semibold text-bg disabled:opacity-50">
           Agregar
         </button>
       </form>

@@ -46,11 +46,11 @@ export async function setDsTaskStatusAction(id: string, status: "pending" | "don
  * un "resultado del día", sin tope de 3 ni result_rank; day queda null
  * hasta que se le asigne uno).
  */
-export async function addLaneTaskAction(lane: Lane, title: string) {
+export async function addLaneTaskAction(lane: Lane, title: string, strategyCode?: string) {
   const clean = title.trim().slice(0, 140);
   if (!clean) return;
   const db = await authed();
-  const { error } = await db.from("ds_tasks").insert({ lane, title: clean });
+  const { error } = await db.from("ds_tasks").insert({ lane, title: clean, strategy_code: strategyCode || null });
   if (error) throw new Error(error.message);
   revalidatePath("/carriles");
 }
@@ -175,6 +175,60 @@ export async function logHoursAction(lane: Lane, delta: number): Promise<number>
   revalidatePath("/nucleo");
   revalidatePath("/carriles");
   return Number(data);
+}
+
+/**
+ * "Estructura por carril" (21/10) -- hasta ahora el contador de Ruta B
+ * era de solo lectura, nada escribía ahí. Esto registra la acción real.
+ */
+export async function addRouteBActionAction(description: string, strategyCode?: string) {
+  const clean = description.trim().slice(0, 200);
+  if (!clean) throw new Error("Falta la descripción");
+  const db = await authed();
+  const { error } = await db
+    .from("ds_routeb_actions")
+    .insert({ description: clean, strategy_code: strategyCode || null });
+  if (error) throw new Error(error.message);
+  revalidatePath("/nucleo");
+  revalidatePath("/carriles");
+}
+
+/** Carril B — "Apoyo deal Miami": tope semanal editable (texto libre, "por definir" si queda vacío). */
+export async function setMiamiWeeklyCapAction(hours: number | null) {
+  const db = await authed();
+  const { error } = await db
+    .from("ds_lane_info")
+    .update({ miami_weekly_cap_h: hours })
+    .eq("lane", "B");
+  if (error) throw new Error(error.message);
+  revalidatePath("/carriles/b");
+}
+
+export async function bumpMiamiHoursAction(delta: number): Promise<number> {
+  if (!Number.isFinite(delta) || Math.abs(delta) > 8) throw new Error("Valor inválido");
+  const db = await authed();
+  const { data: row } = await db.from("ds_lane_info").select("miami_hours_logged").eq("lane", "B").maybeSingle();
+  const next = Math.max(0, Number((row as { miami_hours_logged: number } | null)?.miami_hours_logged ?? 0) + delta);
+  const { error } = await db.from("ds_lane_info").update({ miami_hours_logged: next }).eq("lane", "B");
+  if (error) throw new Error(error.message);
+  revalidatePath("/carriles/b");
+  return next;
+}
+
+/** Carril B/D — notas largas del carril (objetivo/estrategia en borrador), mismo editor genérico. */
+export async function saveDsLaneNotesAction(lane: Lane, doc: NoteDocument) {
+  const db = await authed();
+  const { error } = await db
+    .from("ds_lane_info")
+    .update({
+      notes: doc as never,
+      notes_plain: noteDocumentToPlainText(doc) || null,
+      notes_updated_at: new Date().toISOString(),
+    })
+    .eq("lane", lane);
+  if (error) throw new Error(error.message);
+  revalidatePath("/carriles/b");
+  revalidatePath("/contenido");
 }
 
 export type DsConnectionStage = "nuevo" | "contactado" | "conversando" | "reunion" | "cerrado";

@@ -6,6 +6,7 @@ import { CounterStrip } from "@/components/nucleo/CounterStrip";
 import { HudPanel } from "@/components/ui/HudPanel";
 import { Results } from "@/components/nucleo/Results";
 import { HoursButtons } from "@/components/nucleo/HoursButtons";
+import { RouteBButton } from "@/components/nucleo/RouteBButton";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,7 @@ export default async function NucleoPage() {
                 <dd className="text-text">{d.routeB}/5</dd>
               </div>
             </dl>
+            <RouteBButton />
           </HudPanel>
         </div>
       </div>
