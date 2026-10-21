@@ -251,6 +251,11 @@ export type UserSettings = {
   duolingo_last_streak: number;
   duolingo_last_checked_at: string | null;
   updated_at: string;
+  // Realineación 21/10 — conexión Google Calendar (lectura + escritura, Semana).
+  google_calendar_access_token: string | null;
+  google_calendar_refresh_token: string | null;
+  google_calendar_token_expires_at: string | null;
+  google_calendar_connected_at: string | null;
 };
 
 export type StreakEvent = {
