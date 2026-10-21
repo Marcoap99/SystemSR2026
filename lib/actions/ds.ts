@@ -32,6 +32,29 @@ export async function toggleDsTaskAction(id: string, done: boolean) {
   revalidatePath("/nucleo");
 }
 
+/** Realineación 21/10 — desglose por carril: cambiar estado (incluye "skipped"). */
+export async function setDsTaskStatusAction(id: string, status: "pending" | "done" | "skipped") {
+  const db = await authed();
+  const { error } = await db.from("ds_tasks").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/nucleo");
+  revalidatePath("/carriles");
+}
+
+/**
+ * Realineación 21/10 — agregar una tarea al backlog de un carril (no es
+ * un "resultado del día", sin tope de 3 ni result_rank; day queda null
+ * hasta que se le asigne uno).
+ */
+export async function addLaneTaskAction(lane: Lane, title: string) {
+  const clean = title.trim().slice(0, 140);
+  if (!clean) return;
+  const db = await authed();
+  const { error } = await db.from("ds_tasks").insert({ lane, title: clean });
+  if (error) throw new Error(error.message);
+  revalidatePath("/carriles");
+}
+
 export async function addDsResultAction(lane: Lane, title: string) {
   const clean = title.trim().slice(0, 140);
   if (!clean) return;

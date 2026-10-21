@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getWeekData } from "@/lib/data/ds-week";
 import { LANE_COLOR, LANE_NAME, LANE_TARGET_H, laneProgress, type Lane } from "@/lib/domain/ds";
 
@@ -9,6 +10,10 @@ const LANE_DESC: Record<Lane, string> = {
   C: "Estudio general: ruta de 10 semanas, SQL e inglés.",
   D: "Contenido: video, carrusel o post. Se mide constancia, no vistas.",
 };
+
+// Realineación 21/10 — cada carril es un "proyecto": A/B tienen su propio
+// desglose en /carriles/[lane]; C ya vive en /ruta (Aprender) y D en /contenido.
+const LANE_HREF: Record<Lane, string> = { A: "/carriles/a", B: "/carriles/b", C: "/ruta", D: "/contenido" };
 
 export default async function CarrilesPage() {
   const d = await getWeekData();
@@ -25,7 +30,12 @@ export default async function CarrilesPage() {
         {lanes.map((l) => {
           const pct = Math.round(laneProgress(l, d.hours[l]) * 100);
           return (
-            <section key={l} className="flex flex-col gap-3 hud-panel p-4" style={{ borderTopColor: LANE_COLOR[l], borderTopWidth: 3 }}>
+            <Link
+              key={l}
+              href={LANE_HREF[l]}
+              className="flex flex-col gap-3 hud-panel p-4 transition-colors hover:border-brand/40"
+              style={{ borderTopColor: LANE_COLOR[l], borderTopWidth: 3 }}
+            >
               <h2 className="font-semibold text-text">
                 {l} · {LANE_NAME[l]}
               </h2>
@@ -48,7 +58,10 @@ export default async function CarrilesPage() {
                 <p className="hud-label">Siguiente acción</p>
                 <p className="text-sm text-text">{d.nextAction[l] ?? "Sin tareas pendientes."}</p>
               </div>
-            </section>
+              <span className="mt-auto text-xs font-medium" style={{ color: LANE_COLOR[l] }}>
+                Ver desglose →
+              </span>
+            </Link>
           );
         })}
       </div>
