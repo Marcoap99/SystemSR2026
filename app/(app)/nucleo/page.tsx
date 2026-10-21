@@ -15,7 +15,7 @@ export default async function NucleoPage() {
   const orbLabel = d.week ? `Semana ${d.week.number}` : d.daysToStart ? `Faltan ${d.daysToStart} d` : "Temporada";
 
   return (
-    <div className="flex flex-col gap-3 md:h-[calc(100vh-6.5rem)] md:overflow-hidden">
+    <div className="flex flex-col gap-3">
       <BootSequence />
       <header className="shrink-0">
         <p className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">{d.todayISO}</p>
@@ -34,19 +34,19 @@ export default async function NucleoPage() {
 
       <CounterStrip data={d} />
 
-      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[310px_1fr_310px]">
-        <div className="flex min-h-0 flex-col gap-3">
-          <HudPanel label="Resultados de hoy" className="min-h-0 overflow-y-auto">
+      <div className="grid gap-3 lg:grid-cols-[310px_1fr_310px] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <HudPanel label="Resultados de hoy">
             <Results tasks={d.tasks} />
           </HudPanel>
-          <HudPanel label="Hito activo" className="min-h-0 overflow-y-auto">
+          <HudPanel label="Hito activo">
             {d.milestone ? (
               <>
                 <p className="font-semibold text-text">
                   {d.milestone.number}. {d.milestone.title}
                 </p>
                 <p className="font-mono text-xs text-text-muted">Fecha: {d.milestone.due_on}</p>
-                <ul className="list-disc pl-5 text-sm text-text-muted">
+                <ul className="list-disc break-words pl-5 text-sm text-text-muted">
                   {d.milestone.criteria.map((c) => (
                     <li key={c}>{c}</li>
                   ))}
@@ -58,15 +58,15 @@ export default async function NucleoPage() {
           </HudPanel>
         </div>
 
-        <div className="flex min-h-0 flex-col items-center justify-center gap-3 overflow-hidden">
+        <div className="flex flex-col items-center gap-3 lg:pt-7">
           <OrbStage hours={d.hours} label={orbLabel} />
-          <div className="w-full max-w-sm shrink-0">
+          <div className="w-full max-w-sm">
             <HoursButtons hours={d.hours} />
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-col gap-3">
-          <HudPanel label="Rachas y Ruta B" className="min-h-0 overflow-y-auto">
+        <div className="flex flex-col gap-3">
+          <HudPanel label="Rachas y Ruta B">
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="font-mono text-xs text-text-muted">Inglés hoy</dt>

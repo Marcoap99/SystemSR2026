@@ -27,7 +27,7 @@ export function Results({ tasks }: { tasks: DsTask[] }) {
     <div className="flex flex-col gap-3">
       <ul className="flex flex-col gap-2">
         {rows.map(({ n, task }) => (
-          <li key={task.id} className="flex items-center gap-3 rounded-card border border-border bg-surface-2 px-3 py-2">
+          <li key={task.id} className="flex min-w-0 items-center gap-3 rounded-card border border-border bg-surface-2 px-3 py-2">
             <span className="font-mono text-xs text-text-muted">{n}</span>
             <button
               type="button"
@@ -44,7 +44,7 @@ export function Results({ tasks }: { tasks: DsTask[] }) {
                 {task.status === "done" ? <span className="text-xs font-bold text-bg">✓</span> : null}
               </span>
             </button>
-            <span className={task.status === "done" ? "text-text-muted line-through" : "text-text"}>{task.title}</span>
+            <span className={`min-w-0 break-words ${task.status === "done" ? "text-text-muted line-through" : "text-text"}`}>{task.title}</span>
           </li>
         ))}
         {rows.length === 0 ? <li className="text-sm text-text-muted">Sin resultados hoy. Define hasta 3.</li> : null}
@@ -55,17 +55,17 @@ export function Results({ tasks }: { tasks: DsTask[] }) {
             e.preventDefault();
             add();
           }}
-          className="flex gap-2"
+          className="flex flex-wrap gap-2"
         >
           <label className="sr-only" htmlFor="ds-lane">Carril</label>
-          <select id="ds-lane" value={lane} onChange={(e) => setLane(e.target.value as Lane)} className="min-h-11 rounded-card border border-border bg-surface px-2 text-sm">
+          <select id="ds-lane" value={lane} onChange={(e) => setLane(e.target.value as Lane)} className="min-h-11 w-16 shrink-0 rounded-card border border-border bg-surface px-2 text-sm focus-visible:ring-2 focus-visible:ring-brand">
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
           </select>
           <label className="sr-only" htmlFor="ds-title">Nuevo resultado</label>
-          <input id="ds-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} placeholder="Nuevo resultado" className="min-h-11 min-w-0 flex-1 rounded-card border border-border bg-surface px-3 text-sm outline-none focus:border-brand" />
-          <button type="submit" disabled={pending || !title.trim()} className="min-h-11 rounded-card bg-brand px-4 text-sm font-semibold text-bg disabled:opacity-50">
+          <input id="ds-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} placeholder="Nuevo resultado" className="min-h-11 min-w-[140px] flex-1 rounded-card border border-border bg-surface px-3 text-sm outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand" />
+          <button type="submit" disabled={pending || !title.trim()} className="min-h-11 shrink-0 rounded-card bg-brand px-4 text-sm font-semibold text-bg disabled:opacity-50">
             Agregar
           </button>
         </form>

@@ -19,11 +19,7 @@ export function OrbStage({ hours, label }: { hours: Record<Lane, number>; label:
 
   if (flat) return <Orb hours={hours} label={label} />;
   return (
-    <div
-      role="img"
-      aria-label={`${label}. ${summary}`}
-      className="relative mx-auto aspect-square h-full w-full max-h-[420px] max-w-[420px]"
-    >
+    <div role="img" aria-label={`${label}. ${summary}`} className="relative mx-auto aspect-square w-full max-w-[360px]">
       <JarvisOrb3D hours={hours} onFallback={() => setFlat(true)} />
       <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
         <div>

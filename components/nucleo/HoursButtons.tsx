@@ -11,7 +11,7 @@ export function HoursButtons({ hours }: { hours: Record<Lane, number> }) {
       {(["A", "B", "C", "D"] as Lane[]).map((l) => (
         <li key={l} className="flex items-center gap-2 text-sm">
           <span className="h-2 w-2 rounded-full" style={{ background: LANE_COLOR[l] }} />
-          <span className="flex-1 text-text">
+          <span className="min-w-0 flex-1 text-text">
             {l} {LANE_NAME[l]} · <span className="font-mono">{hours[l]}/{LANE_TARGET_H[l]} h</span>
           </span>
           <button type="button" disabled={pending} aria-label={`Restar media hora a ${l}`} onClick={() => start(() => logHoursAction(l, -0.5))} className="min-h-11 min-w-11 rounded-card border border-border text-text-muted hover:border-brand">
