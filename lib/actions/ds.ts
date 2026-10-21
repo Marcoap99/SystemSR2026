@@ -159,18 +159,22 @@ export async function setDsResourceStatusAction(id: string, status: "pending" | 
   revalidatePath("/ruta");
 }
 
-export async function logHoursAction(lane: Lane, delta: number) {
-  if (!["A", "B", "C", "D"].includes(lane) || !Number.isFinite(delta) || Math.abs(delta) > 8) return;
+/**
+ * Un solo viaje a la base (RPC increment_hours_log, atómico) en vez de
+ * leer y después escribir -- los botones +/-0.5h de Núcleo se sentían
+ * lentos con el patrón anterior, y además esa ventana entre leer y
+ * escribir podía perder un click si se tocaba rápido dos veces seguidas.
+ */
+export async function logHoursAction(lane: Lane, delta: number): Promise<number> {
+  if (!["A", "B", "C", "D"].includes(lane) || !Number.isFinite(delta) || Math.abs(delta) > 8) {
+    throw new Error("Valor inválido");
+  }
   const db = await authed();
-  const day = today();
-  const cur = await db.from("ds_hours_log").select("actual_h").eq("lane", lane).eq("day", day).maybeSingle();
-  const next = Math.max(0, Number((cur.data as { actual_h: number } | null)?.actual_h ?? 0) + delta);
-  const { error } = await db
-    .from("ds_hours_log")
-    .upsert({ lane, day, actual_h: next }, { onConflict: "user_id,lane,day" });
+  const { data, error } = await db.rpc("increment_hours_log", { p_lane: lane, p_day: today(), p_delta: delta });
   if (error) throw new Error(error.message);
   revalidatePath("/nucleo");
   revalidatePath("/carriles");
+  return Number(data);
 }
 
 export type DsConnectionStage = "nuevo" | "contactado" | "conversando" | "reunion" | "cerrado";
