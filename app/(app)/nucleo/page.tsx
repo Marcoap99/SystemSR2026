@@ -6,7 +6,6 @@ import { CounterStrip } from "@/components/nucleo/CounterStrip";
 import { HudPanel } from "@/components/ui/HudPanel";
 import { Results } from "@/components/nucleo/Results";
 import { HoursButtons } from "@/components/nucleo/HoursButtons";
-import { CommandBar } from "@/components/nucleo/CommandBar";
 
 export const dynamic = "force-dynamic";
 
@@ -16,31 +15,31 @@ export default async function NucleoPage() {
   const orbLabel = d.week ? `Semana ${d.week.number}` : d.daysToStart ? `Faltan ${d.daysToStart} d` : "Temporada";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 md:h-[calc(100vh-6.5rem)] md:overflow-hidden">
       <BootSequence />
-      <header>
+      <header className="shrink-0">
         <p className="font-mono text-xs uppercase tracking-[.14em] text-text-muted">{d.todayISO}</p>
         <h1 className="text-2xl font-semibold text-text">{greetingFor(hour)}, Marco</h1>
       </header>
 
       {d.zeroAlert ? (
-        <p role="status" className="rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
+        <p role="status" className="shrink-0 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
           Ayer quedó en cero. Hoy no se repite: cierra un resultado chico, suma media hora o marca el día mínimo viable.
         </p>
       ) : d.daysToStart ? (
-        <p role="status" className="rounded-card border border-brand/30 bg-brand/10 px-4 py-3 text-sm text-text">
+        <p role="status" className="shrink-0 rounded-card border border-brand/30 bg-brand/10 px-4 py-3 text-sm text-text">
           Faltan {d.daysToStart} días para el arranque del 19 de octubre.
         </p>
       ) : null}
 
       <CounterStrip data={d} />
 
-      <div className="grid gap-4 lg:grid-cols-[310px_1fr_310px]">
-        <div className="flex flex-col gap-4">
-          <HudPanel label="Resultados de hoy">
+      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[310px_1fr_310px]">
+        <div className="flex min-h-0 flex-col gap-3">
+          <HudPanel label="Resultados de hoy" className="min-h-0 overflow-y-auto">
             <Results tasks={d.tasks} />
           </HudPanel>
-          <HudPanel label="Hito activo">
+          <HudPanel label="Hito activo" className="min-h-0 overflow-y-auto">
             {d.milestone ? (
               <>
                 <p className="font-semibold text-text">
@@ -59,15 +58,15 @@ export default async function NucleoPage() {
           </HudPanel>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-4">
+        <div className="flex min-h-0 flex-col items-center justify-center gap-3 overflow-hidden">
           <OrbStage hours={d.hours} label={orbLabel} />
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-sm shrink-0">
             <HoursButtons hours={d.hours} />
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <HudPanel label="Rachas y Ruta B">
+        <div className="flex min-h-0 flex-col gap-3">
+          <HudPanel label="Rachas y Ruta B" className="min-h-0 overflow-y-auto">
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="font-mono text-xs text-text-muted">Inglés hoy</dt>
@@ -89,10 +88,6 @@ export default async function NucleoPage() {
           </HudPanel>
         </div>
       </div>
-
-      <HudPanel label="Jarvis">
-        <CommandBar tasks={d.tasks} hours={d.hours} />
-      </HudPanel>
     </div>
   );
 }
