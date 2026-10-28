@@ -231,8 +231,10 @@ export async function saveDsLaneNotesAction(lane: Lane, doc: NoteDocument) {
   revalidatePath("/contenido");
 }
 
-export type DsConnectionStage = "nuevo" | "contactado" | "conversando" | "reunion" | "cerrado";
-const CONNECTION_STAGES: DsConnectionStage[] = ["nuevo", "contactado", "conversando", "reunion", "cerrado"];
+export type DsConnectionStage = "nuevo" | "contactado" | "conversando" | "reunion" | "cerrado" | "sin_respuesta";
+const CONNECTION_STAGES: DsConnectionStage[] = ["nuevo", "contactado", "conversando", "reunion", "cerrado", "sin_respuesta"];
+export type DsConnectionLevel = "A" | "B" | "C";
+const CONNECTION_LEVELS: DsConnectionLevel[] = ["A", "B", "C"];
 
 /** Bloque 5 realineación — Red. */
 export async function addDsConnectionAction(input: {
@@ -260,6 +262,7 @@ export async function setDsConnectionStageAction(id: string, etapa: DsConnection
   const { error } = await db.from("ds_connections").update({ etapa }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/red");
+  revalidatePath("/red/tech-week");
 }
 
 export async function updateDsConnectionAction(
@@ -273,6 +276,16 @@ export async function updateDsConnectionAction(
   if ("nota" in patch) clean.nota = (patch.nota ?? "").trim().slice(0, 2000) || null;
   const { error } = await db.from("ds_connections").update(clean).eq("id", id);
   if (error) throw new Error(error.message);
+  revalidatePath("/red");
+}
+
+/** 27/10 — Contactos Perú Tech Week: nivel editable desde la tabla. */
+export async function setDsConnectionLevelAction(id: string, nivel: DsConnectionLevel | null) {
+  if (nivel !== null && !CONNECTION_LEVELS.includes(nivel)) throw new Error("Nivel inválido");
+  const db = await authed();
+  const { error } = await db.from("ds_connections").update({ nivel }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/red/tech-week");
   revalidatePath("/red");
 }
 

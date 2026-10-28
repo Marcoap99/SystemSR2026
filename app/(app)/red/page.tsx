@@ -11,6 +11,7 @@ const STAGE_LABEL: Record<DsConnection["etapa"], string> = {
   conversando: "Conversando",
   reunion: "Reunión",
   cerrado: "Cerrado",
+  sin_respuesta: "Sin respuesta",
 };
 const STAGES = Object.keys(STAGE_LABEL) as DsConnection["etapa"][];
 
@@ -30,9 +31,14 @@ export default async function RedPage() {
           <h1 className="text-xl font-semibold text-text">Red</h1>
           <p className="mt-1 text-sm text-text-muted">Contactos de esta temporada, por etapa.</p>
         </div>
-        <Link href="/conectar" className="text-sm text-brand hover:underline">
-          Ver Temporada 1 (archivo) →
-        </Link>
+        <div className="flex flex-col items-end gap-1 text-sm">
+          <Link href="/red/tech-week" className="text-brand hover:underline">
+            Contactos Perú Tech Week →
+          </Link>
+          <Link href="/conectar" className="text-text-muted hover:text-text">
+            Ver Temporada 1 (archivo) →
+          </Link>
+        </div>
       </div>
 
       <AddConnectionForm />
